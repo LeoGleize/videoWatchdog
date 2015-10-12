@@ -41,10 +41,12 @@ int main(void) {
 
     camera1->initializeCamera(deckLink);
     cout << "displaying images!"<<endl;
-    cv::imshow("camera1", camera1->captureLastCvMat());
-    cvWaitKey(-1);
-    cv::imshow("camera1", camera1->captureLastCvMat());
-    cvWaitKey(-1);
+
+    while (true) {
+    	cv::imshow("camera1", camera1->captureLastCvMat());
+    	if (cvWaitKey(30) >= 0)
+    		break;
+    }
 
     return 0;
 bail:

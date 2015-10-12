@@ -1,4 +1,6 @@
 #include "cameradecklink.h"
+#include <iostream>
+using namespace std;
 
 CameraDecklink::CameraDecklink()
 {
@@ -40,6 +42,9 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink){
             displayMode->GetName(&displayModeName);
             selectedDisplayMode = displayMode->GetDisplayMode();
 
+            cout << selectedDisplayMode << endl
+                 << "should be " << bmdModeHD1080i50 << endl;
+            selectedDisplayMode = bmdModeHD1080i50;
             deckLinkInput->DoesSupportVideoMode(selectedDisplayMode, pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
 
             if (result == bmdDisplayModeNotSupported)
