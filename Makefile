@@ -1,5 +1,5 @@
 
-CXXFLAGS =	-O0 -g -Wall -fmessage-length=0  
+CXXFLAGS =	-O4 -g -Wall -fmessage-length=0  
 
 OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/DeckLinkAPIDispatch.o
 
