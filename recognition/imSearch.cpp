@@ -10,6 +10,7 @@
 #include <thread>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <unistd.h>
+#include <omp.h>
 
 using namespace imageSearchObjects;
 using namespace std;
@@ -41,6 +42,7 @@ imSearch::imSearch() {
 	    entity = readdir(dir);
 	    cout <<entity<<endl;
 	}
+	FilterTemplates();
 	closedir(dir);
 }
 
@@ -75,30 +77,48 @@ string imSearch::getNameOf(int id){
 	return this->images[id].filename;
 }
 
+void imSearch::FilterTemplates(){
+	for(int i = 0; i < images.size(); i++){
+		cv::Mat m = images[i].image;
+		cv::Canny(m, images[i].image, 100,100);
+    	cv::imshow("test", images[i].image);
+    	cv::waitKey(0);
+	}
+}
+
 void imSearch::doSearchOnImage(){
+	mutex accessList;
 	cout<<"on doSearchOnImage()"<<endl;
 	cout<<this<<endl;
 	//convert image to RGB
-	cv::Mat im_gray , result;
+	cv::Mat im_gray , result, canny;
 	cv::cvtColor(toSearchImg,im_gray,CV_RGB2GRAY);
+	canny = im_gray;
+	cv::Canny(im_gray, canny, 100,100);
 	vector<imageSearchObjects::objectOccurence> ocList;
 	//go through the list of templates to be matched
+
+#pragma omp parallel for
 	for(int i = 0; i < this->images.size(); i++){
 		//create template heat map
-		cv::matchTemplate(im_gray, this->images[i].image, result ,CV_TM_SQDIFF_NORMED);
+		cv::matchTemplate(canny, this->images[i].image, result ,CV_TM_CCORR_NORMED);
 
 		double minVal, maxVal;
 		cv::Point minLoc, maxLoc;
 		cv::minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc);
-		cout << "MaxVal found = " << maxVal << " and MinVal = " << minVal << endl;
+
 		objectOccurence myOcc;
 		myOcc.id = i;
-		myOcc.position.x = minLoc.x;
-		myOcc.position.y = minLoc.y;
+		myOcc.position.x = maxLoc.x;
+		myOcc.position.y = maxLoc.y;
 		myOcc.position.width = images[i].image.size().width;
 		myOcc.position.height = images[i].image.size().height;
-		if(minVal < 0.55)
+		if(maxVal >= .65){
+			accessList.lock();
 			ocList.push_back(myOcc);
+			accessList.unlock();
+			cout << "MaxVal found = " << maxVal << " and MinVal = " << minVal << endl;
+		}
 	}
 
 	//write occurence list
