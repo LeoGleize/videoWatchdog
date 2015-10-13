@@ -1,5 +1,9 @@
 #include "cameradecklink.h"
 #include <iostream>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 using namespace std;
 
 CameraDecklink::CameraDecklink()
@@ -238,11 +242,11 @@ IplImage* DeckLinkCaptureDelegate::getLastImage(){
     return lastImage;
 }
 
-//TOFIX: clamping of values once they are out of range!
+//TOFIX: clamping of values once they are out of range! (will it solve color distortions?)
 void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes, IplImage * m_RGB){
     if(!m_RGB)  m_RGB = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 
-    unsigned char* pData = (unsigned char *) frameBytes;
+    unsigned char *pData = (unsigned char *) frameBytes;
 
     for(int i = 0, j=0; i < width * height * 3; i+=6, j+=4)
     {
@@ -253,7 +257,7 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes, IplImage * 
         //fprintf(stderr, "%d\n", v);
         m_RGB->imageData[i+2] = 1.0*y + 8 + 1.402*(v-128);               	 // r
         m_RGB->imageData[i+1] = 1.0*y - 0.34413*(u-128) - 0.71414*(v-128);   // g
-        m_RGB->imageData[i] = 1.0*y + 1.772*(u-128) + 0;                     // b
+        m_RGB->imageData[i]   = 1.0*y + 1.772*(u-128) + 0;                   // b
 
         y = pData[j+3];
         m_RGB->imageData[i+5] = 1.0*y + 8 + 1.402*(v-128);               	 // r

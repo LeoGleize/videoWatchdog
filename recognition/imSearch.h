@@ -52,6 +52,7 @@ public:
 private:
 	std::mutex lockOnWrite;
 	std::mutex lockOnCall;
+
 	vector<imageSearchObjects::__imData> images;
 	bool finished = false;
 	string path = "./patterns";
@@ -59,6 +60,7 @@ private:
 	cv::Mat toSearchImg;
 
 	void doSearchOnImage();
+	void FilterTemplates();
 };
 
 #endif /* ISEARCH_H_ */

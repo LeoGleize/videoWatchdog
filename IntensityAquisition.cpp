@@ -13,6 +13,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include "recognition/imSearch.h"
+#include <omp.h>
 
 using namespace std;
 
@@ -58,9 +59,10 @@ int main(void) {
     					 cv::Point(ocList[i].position.x,ocList[i].position.y - 5),
     					 CV_FONT_HERSHEY_PLAIN,
     					 1.2,
-    					 cv::Scalar(0,250,0)
-    				   );
+    					 cv::Scalar(0,250,0));
     	}
+    	cv::Mat m2 = img;
+    	//cv::Canny(m2, img, 100,150);
     	cv::imshow("camera1", img);
 
     	if (cvWaitKey(10) >= 0)
