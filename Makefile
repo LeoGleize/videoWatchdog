@@ -1,7 +1,8 @@
 
-CXXFLAGS =	-O4 -g -Wall -fmessage-length=0  
+CXXFLAGS =	-O3 -g -Wall -fmessage-length=0  -std=c++11
 
-OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/DeckLinkAPIDispatch.o
+OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/DeckLinkAPIDispatch.o \
+			recognition/imSearch.o
 
 LIBS = 		`pkg-config --libs opencv` -lopencv_highgui -ldl -lpthread
 

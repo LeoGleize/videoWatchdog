@@ -4,6 +4,7 @@ using namespace std;
 
 CameraDecklink::CameraDecklink()
 {
+
 }
 
 void CameraDecklink::initializeCamera(IDeckLink *_deckLink){
@@ -42,9 +43,11 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink){
             displayMode->GetName(&displayModeName);
             selectedDisplayMode = displayMode->GetDisplayMode();
 
-            cout << selectedDisplayMode << endl
-                 << "should be " << bmdModeHD1080i50 << endl;
+//            cout << selectedDisplayMode << endl
+//                 << "should be " << bmdModeHD1080i50 << endl;
+#ifdef FIX_RESOLUTION
             selectedDisplayMode = bmdModeHD1080i50;
+#endif
             deckLinkInput->DoesSupportVideoMode(selectedDisplayMode, pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
 
             if (result == bmdDisplayModeNotSupported)
@@ -98,7 +101,7 @@ IplImage* CameraDecklink::captureLastFrame(){
     //pthread_mutex_lock(delegate->sleepMutex);
     pthread_cond_wait(delegate->sleepCond, delegate->sleepMutex);
     //pthread_mutex_unlock(delegate->sleepMutex);
-    fprintf(stderr, "Stopping Capture\n");
+//    fprintf(stderr, "Stopping Capture\n");
 
     return delegate->getLastImage();
 }
@@ -106,6 +109,7 @@ IplImage* CameraDecklink::captureLastFrame(){
 cv::Mat CameraDecklink::captureLastCvMat(){
     IplImage* img = captureLastFrame();
     cv::Mat mat =  cv::cvarrToMat(img); //free???
+    cvRelease((void**)&img);
     return mat;
 }
 
@@ -190,12 +194,12 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(IDeckLinkVideoInputFrame
                     timecode->GetString(&timecodeString);
                 }
             }
-
-            fprintf(stderr, "Frame received (#%lu) [%s] - %s - Size: %li bytes\n",
-                    frameCount,
-                    timecodeString != NULL ? timecodeString : "No timecode",
-                    rightEyeFrame != NULL ? "Valid Frame (3D left/right)" : "Valid Frame",
-                    videoFrame->GetRowBytes() * videoFrame->GetHeight());
+//
+//            fprintf(stderr, "Frame received (#%lu) [%s] - %s - Size: %li bytes\n",
+//                    frameCount,
+//                    timecodeString != NULL ? timecodeString : "No timecode",
+//                    rightEyeFrame != NULL ? "Valid Frame (3D left/right)" : "Valid Frame",
+//                    videoFrame->GetRowBytes() * videoFrame->GetHeight());
 
             if (timecodeString)
                 free((void*)timecodeString);
@@ -234,6 +238,7 @@ IplImage* DeckLinkCaptureDelegate::getLastImage(){
     return lastImage;
 }
 
+//TOFIX: clamping of values once they are out of range!
 void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes, IplImage * m_RGB){
     if(!m_RGB)  m_RGB = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
 
@@ -246,14 +251,14 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes, IplImage * 
         unsigned char v = pData[j+2];
 
         //fprintf(stderr, "%d\n", v);
-        m_RGB->imageData[i+2] = 1.0*y + 8 + 1.402*(v-128);               // r
+        m_RGB->imageData[i+2] = 1.0*y + 8 + 1.402*(v-128);               	 // r
         m_RGB->imageData[i+1] = 1.0*y - 0.34413*(u-128) - 0.71414*(v-128);   // g
-        m_RGB->imageData[i] = 1.0*y + 1.772*(u-128) + 0;                            // b
+        m_RGB->imageData[i] = 1.0*y + 1.772*(u-128) + 0;                     // b
 
         y = pData[j+3];
-        m_RGB->imageData[i+5] = 1.0*y + 8 + 1.402*(v-128);               // r
+        m_RGB->imageData[i+5] = 1.0*y + 8 + 1.402*(v-128);               	 // r
         m_RGB->imageData[i+4] = 1.0*y - 0.34413*(u-128) - 0.71414*(v-128);   // g
-        m_RGB->imageData[i+3] = 1.0*y + 1.772*(u-128) + 0;
+        m_RGB->imageData[i+3] = 1.0*y + 1.772*(u-128) + 0;					 // b
     }
 }
 
