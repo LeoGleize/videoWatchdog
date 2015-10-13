@@ -10,11 +10,15 @@
 #include "blackmagic/cameradecklink.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/features2d.hpp>
+#include "recognition/imSearch.h"
 
 using namespace std;
 
-int main(void) {
 
+int main(void) {
+	imSearch 		  imageSearch;
     IDeckLink 		  *deckLink;
     IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance();
 
@@ -43,8 +47,23 @@ int main(void) {
     cout << "displaying images!"<<endl;
 
     while (true) {
-    	cv::imshow("camera1", camera1->captureLastCvMat());
-    	if (cvWaitKey(30) >= 0)
+    	cv::Mat img = camera1->captureLastCvMat();
+
+    	imageSearch.doSearch(img);
+    	vector<imageSearchObjects::objectOccurence> ocList = imageSearch.getOccurrences();
+    	for(int i = 0; i < ocList.size(); i++){
+    		cv::rectangle(img,ocList[i].position,cv::Scalar(0,250,0),3);
+    		cv::putText( img,
+    					 imageSearch.getNameOf(ocList[i].id),
+    					 cv::Point(ocList[i].position.x,ocList[i].position.y - 5),
+    					 CV_FONT_HERSHEY_PLAIN,
+    					 1.2,
+    					 cv::Scalar(0,250,0)
+    				   );
+    	}
+    	cv::imshow("camera1", img);
+
+    	if (cvWaitKey(10) >= 0)
     		break;
     }
 

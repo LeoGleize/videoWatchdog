@@ -5,6 +5,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#define FIX_RESOLUTION
+
 class DeckLinkCaptureDelegate : public IDeckLinkInputCallback
 {
 public:
