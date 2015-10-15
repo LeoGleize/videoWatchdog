@@ -12,14 +12,14 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
-#include "recognition/imSearch.h"
 #include <omp.h>
+#include "ServerInstance/ServerInstance.h"
 
 using namespace std;
 
 
 int main(void) {
-	imSearch 		  imageSearch;
+	RestServer::ServerInstance myServer;
     IDeckLink 		  *deckLink;
     IDeckLinkIterator *deckLinkIterator = CreateDeckLinkIteratorInstance();
 
@@ -50,26 +50,15 @@ int main(void) {
     while (true) {
     	cv::Mat img = camera1->captureLastCvMat();
 
-    	imageSearch.doSearch(img);
-    	vector<imageSearchObjects::objectOccurence> ocList = imageSearch.getOccurrences();
-    	for(int i = 0; i < ocList.size(); i++){
-    		cv::rectangle(img,ocList[i].position,cv::Scalar(0,250,0),3);
-    		cv::putText( img,
-    					 imageSearch.getNameOf(ocList[i].id),
-    					 cv::Point(ocList[i].position.x,ocList[i].position.y - 5),
-    					 CV_FONT_HERSHEY_PLAIN,
-    					 1.2,
-    					 cv::Scalar(0,250,0));
-    	}
-    	cv::Mat m2 = img;
-    	//cv::Canny(m2, img, 100,150);
     	cv::imshow("camera1", img);
 
-    	if (cvWaitKey(10) >= 0)
+    	if (cvWaitKey(5) >= 0)
     		break;
     }
 
+    myServer.stop();
     return 0;
+
 bail:
 
     if (deckLink != NULL)
