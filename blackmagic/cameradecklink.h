@@ -4,64 +4,73 @@
 #include "./cardSDK/DeckLinkAPI.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-
+#include <mutex>
 #define FIX_RESOLUTION
 
-class DeckLinkCaptureDelegate : public IDeckLinkInputCallback
-{
+class DeckLinkCaptureDelegate: public IDeckLinkInputCallback {
 public:
-    DeckLinkCaptureDelegate();
-    ~DeckLinkCaptureDelegate();
+	DeckLinkCaptureDelegate();
+	~DeckLinkCaptureDelegate();
 
-    virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID *ppv) { return E_NOINTERFACE; }
-    virtual ULONG STDMETHODCALLTYPE AddRef(void);
-    virtual ULONG STDMETHODCALLTYPE  Release(void);
-    virtual HRESULT STDMETHODCALLTYPE VideoInputFormatChanged(BMDVideoInputFormatChangedEvents, IDeckLinkDisplayMode*, BMDDetectedVideoInputFormatFlags);
-    virtual HRESULT STDMETHODCALLTYPE VideoInputFrameArrived(IDeckLinkVideoInputFrame*, IDeckLinkAudioInputPacket*);
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID *ppv) {
+		return E_NOINTERFACE;
+	}
+	virtual ULONG STDMETHODCALLTYPE AddRef(void);
+	virtual ULONG STDMETHODCALLTYPE Release(void);
+	virtual HRESULT STDMETHODCALLTYPE VideoInputFormatChanged(
+			BMDVideoInputFormatChangedEvents, IDeckLinkDisplayMode*,
+			BMDDetectedVideoInputFormatFlags);
+	virtual HRESULT STDMETHODCALLTYPE VideoInputFrameArrived(
+			IDeckLinkVideoInputFrame*, IDeckLinkAudioInputPacket*);
 
-    IplImage* getLastImage();
+	IplImage* getLastImage();
 
-    void convertFrameToOpenCV(void* frameBytes, IplImage * m_RGB);
+	void convertFrameToOpenCV(void* frameBytes, IplImage * m_RGB);
 
-    pthread_mutex_t		*sleepMutex;
-    pthread_cond_t		*sleepCond;
-    //        bool stopped;
-    //        bool converting;
-    void* frameBytes;
-    long frameCount;
-    BMDTimecodeFormat		g_timecodeFormat;
+	pthread_mutex_t *sleepMutex;
+	pthread_cond_t *sleepCond;
+	//        bool stopped;
+	//        bool converting;
+	void* frameBytes;
+	long frameCount;
+	BMDTimecodeFormat g_timecodeFormat;
 
 private:
-    ULONG				m_refCount;
-    pthread_mutex_t		m_mutex;
-    IplImage* lastImage;
+	ULONG m_refCount;
+	pthread_mutex_t m_mutex;
+	IplImage* lastImage;
 
-    int height, width;
+	int height, width;
 
 };
 
-class CameraDecklink
-{
+class CameraDecklink {
 public:
-    CameraDecklink();
+	CameraDecklink();
 
-    void initializeCamera(IDeckLink * _deckLink);
+	void initializeCamera(IDeckLink * _deckLink);
 
-    IplImage * captureLastFrame();
-    cv::Mat captureLastCvMat();
+	IplImage * captureLastFrame();
+	cv::Mat captureLastCvMat();
 
 private:
-    DeckLinkCaptureDelegate 	*delegate;
-    IDeckLinkInput		*deckLinkInput;
-    IDeckLinkDisplayModeIterator *displayModeIterator;
-    IDeckLinkDisplayMode	*displayMode;
-    BMDVideoInputFlags	inputFlags;
-    BMDDisplayMode selectedDisplayMode;
-    BMDPixelFormat pixelFormat;
-    int	displayModeCount;
-    int	exitStatus;
-    bool foundDisplayMode;
-    HRESULT result;
+	IDeckLink *deckLink;
+	IDeckLinkIterator *deckLinkIterator;
+
+	DeckLinkCaptureDelegate *delegate;
+	std::mutex mutexCallOnce;
+	IDeckLinkInput *deckLinkInput;
+	IDeckLinkDisplayModeIterator *displayModeIterator;
+	IDeckLinkDisplayMode *displayMode;
+	BMDVideoInputFlags inputFlags;
+	BMDDisplayMode selectedDisplayMode;
+	BMDPixelFormat pixelFormat;
+	int displayModeCount;
+	int exitStatus;
+	bool foundDisplayMode;
+	HRESULT result;
+
+	void bail();
 
 };
 

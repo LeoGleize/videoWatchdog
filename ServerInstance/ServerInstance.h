@@ -9,27 +9,33 @@
 #define SERVERINSTANCE_H_
 
 #include "../blackmagic/cameradecklink.h"
+#include "base64/base64.hpp"
 #include <cpprest/http_listener.h>
+#include <opencv2/core/core.hpp>
 #include <iostream>
+#include <vector>
 #include <mutex>
 #include <string>
 
 namespace RestServer {
 
-static CameraDecklink *cameraDeckLink;
-
 class ServerInstance {
 
 private:
+	std::vector<web::http::experimental::listener::http_listener> myListeners;
 
 public:
 	ServerInstance();
 	void stop();
+	void start();
 	virtual ~ServerInstance();
+
+	static CameraDecklink *cameraDeckLink;
 };
 
 /* Callbacks */
 void grabScreen(web::http::http_request request);
+void detectState(web::http::http_request request);
 
 } /* namespace RestServer */
 
