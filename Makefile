@@ -7,7 +7,7 @@ OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/Dec
 
 LIBS = 		`pkg-config --libs opencv` -lopencv_highgui -ldl -lpthread -fopenmp -lboost_system -lboost_thread -lcpprest
 
-TARGET =	IntensityAquisition
+TARGET =	IntensityProServer
 
 $(TARGET):	$(OBJS)
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS) $(INCDIRS)
