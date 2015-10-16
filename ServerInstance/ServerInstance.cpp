@@ -56,7 +56,10 @@ namespace RestServer {
 			answer["height"] = json::value::number(img.rows);
 			answer["data"] = json::value::string(std::string(base64_encode(img.data, img.step[0] * img.rows)));
 			request.reply(status_codes::OK, answer);
+#ifdef DEBUG_IMAGES
 			cv::imwrite("test.png",img);
+#endif
+
 		}else{
 			json::value answer;
 			answer["error"] = json::value::number(1);

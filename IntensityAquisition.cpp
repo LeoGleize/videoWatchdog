@@ -18,31 +18,33 @@
 using namespace std;
 
 
-int main(void) {
+int main(int argc, char **argv) {
 	RestServer::ServerInstance myServer;
+	bool showScreen = true;
 
+	if(argc == 2 && strcmp(argv[1],"-h") == 0){
+		std::cout<<"Intensity Pro Acquisition Server"<<std::endl<<std::endl;
+		std::cout<<"Options:"<<std::endl;
+		std::cout<<"	-no-video : video display is not shown, server will be executed normally"<<std::endl;
+		return 0;
+	}else if(argc == 2 && strcmp(argv[1],"-no-video") == 0)
+		showScreen = false;
 
     CameraDecklink    *camera1;
 
     camera1 = new CameraDecklink();
     RestServer::ServerInstance::cameraDeckLink = camera1;
     myServer.start();
-
-    int i = 0;
     while (true) {
-    	cv::Mat img = camera1->captureLastCvMat();
+    	if(showScreen){
+    		cv::Mat img = camera1->captureLastCvMat();
+    		cv::imshow("camera1", img);
+    	}
 
-    	cv::imshow("camera1", img);
-//
-//    	cv::imwrite(std::to_string(i) + ".png", img);
-//    	i++;
-//    	if(i > 200)
-//    		break;
-    	if (cvWaitKey(5) >= 0)
+    	if (cvWaitKey(10) >= 0)
     		continue;
     }
 
     myServer.stop();
     return 0;
-
 }

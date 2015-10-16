@@ -34,14 +34,19 @@ public:
 };
 
 /* Callbacks */
+enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_BLACK_SCREEN, S_NO_VIDEO};
 
 struct __screenState{
-
+	//max norm calculated for differences between two frames divided by number of pixels
+	double maxDiffppixel;
+	//max norm calculated for first frame divided by number of pixels
+	double maxNormppixel;
+	outputState oState;
 };
 
 void grabScreen(web::http::http_request request);
 void detectState(web::http::http_request request);
-__screenState getState(int dt_ms, int dt_interFramems);
+__screenState getState(int dt_ms);
 
 } /* namespace RestServer */
 
