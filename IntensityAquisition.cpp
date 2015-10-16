@@ -28,11 +28,16 @@ int main(void) {
     RestServer::ServerInstance::cameraDeckLink = camera1;
     myServer.start();
 
+    int i = 0;
     while (true) {
     	cv::Mat img = camera1->captureLastCvMat();
 
     	cv::imshow("camera1", img);
-
+//
+//    	cv::imwrite(std::to_string(i) + ".png", img);
+//    	i++;
+//    	if(i > 200)
+//    		break;
     	if (cvWaitKey(5) >= 0)
     		continue;
     }

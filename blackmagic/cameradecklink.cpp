@@ -146,7 +146,7 @@ IplImage* CameraDecklink::captureLastFrame() {
 cv::Mat CameraDecklink::captureLastCvMat() {
 	mutexCallOnce.lock();
 	IplImage* img = captureLastFrame();
-	cv::Mat mat = cv::cvarrToMat(img); //free???
+	cv::Mat mat = cv::cvarrToMat(img).clone(); //free???
 	cvRelease((void**) &img);
     mutexCallOnce.unlock();
 	return mat;

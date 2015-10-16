@@ -17,6 +17,7 @@ using namespace web::http::experimental::listener;
 namespace RestServer {
 
 	ServerInstance::ServerInstance() {
+		std::cout<<"Starting server on http://localhost:8080"<<std::endl;
 		web::uri myRoute("http://localhost:8080/image");
 		myListeners.push_back(http_listener(myRoute));
 		myListeners[0].support(methods::GET, grabScreen);
@@ -32,9 +33,10 @@ namespace RestServer {
 
 	void ServerInstance::start() {
 		try {
+			std::cout<<"Adding routes to server"<<std::endl;
 			for(unsigned int i = 0; i < myListeners.size(); i++){
 				http_listener *listener = &(myListeners[i]);
-				listener->open().then([listener]() {std::cout<<"starting to listen on route\n";}).wait();
+				listener->open().then([listener]() {std::cout<<"";}).wait();
 			}
 		} catch (std::exception const & e) {
 			std::cout << e.what() << std::endl;
@@ -54,6 +56,7 @@ namespace RestServer {
 			answer["height"] = json::value::number(img.rows);
 			answer["data"] = json::value::string(std::string(base64_encode(img.data, img.step[0] * img.rows)));
 			request.reply(status_codes::OK, answer);
+			cv::imwrite("test.png",img);
 		}else{
 			json::value answer;
 			answer["error"] = json::value::number(1);

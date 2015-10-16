@@ -34,8 +34,14 @@ public:
 };
 
 /* Callbacks */
+
+struct __screenState{
+
+};
+
 void grabScreen(web::http::http_request request);
 void detectState(web::http::http_request request);
+__screenState getState(int dt_ms, int dt_interFramems);
 
 } /* namespace RestServer */
 
