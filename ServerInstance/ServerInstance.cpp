@@ -20,11 +20,15 @@ namespace RestServer {
 		std::cout<<"Starting server on http://localhost:8080"<<std::endl;
 		web::uri myRoute("http://localhost:8080/image");
 		myListeners.push_back(http_listener(myRoute));
-		myListeners[0].support(methods::GET, grabScreen);
+		myListeners[0].support(methods::GET, wwwgrabScreen);
 
 		web::uri myRoute2("http://localhost:8080/status");
 		myListeners.push_back(http_listener(myRoute2));
-		myListeners[1].support(methods::POST, detectState);
+		myListeners[1].support(methods::POST, wwwdetectState);
+
+		web::uri myRoute3("http://localhost:8080/getScreenEvent");
+		myListeners.push_back(http_listener(myRoute3));
+		myListeners[2].support(methods::POST, wwwdetectEvent);
 	}
 
 	ServerInstance::~ServerInstance() {
@@ -47,8 +51,8 @@ namespace RestServer {
 
 	}
 
-	/*Sends screen actually being show to client*/
-	void grabScreen(http_request request) {
+	/*Sends screen actually being show to client (cv format maybe change that to image?)*/
+	void wwwgrabScreen(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
 			cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
 			json::value answer;
@@ -59,6 +63,10 @@ namespace RestServer {
 #ifdef DEBUG_IMAGES
 			cv::imwrite("test.png",img);
 #endif
+//			std::vector<uchar> imageData;
+//			cv::imencode(".png",img,imageData);
+//			request.headers().add("Content-type","image/png");
+//			request.reply(status_codes::OK, (char*)(&imageData[0]));
 
 		}else{
 			json::value answer;
