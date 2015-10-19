@@ -285,17 +285,16 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		unsigned char v = pData[j + 2];
 
 		//fprintf(stderr, "%d\n", v);
-		m_RGB->imageData[i + 2] = 1.0 * y + 8 + 1.402 * (v - 128);          // r
-		m_RGB->imageData[i + 1] = 1.0 * y - 0.34413 * (u - 128)
-				- 0.71414 * (v - 128);   // g
-		m_RGB->imageData[i] = 1.0 * y + 1.772 * (u - 128) + 0;              // b
+		m_RGB->imageData[i + 2] = cv::saturate_cast<uchar>(y+1.402*(v-128));          		   // r
+		m_RGB->imageData[i + 1] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));   // g
+		m_RGB->imageData[i] = cv::saturate_cast<uchar>(y+1.772*(u-128));                       // b
 
 		y = pData[j + 3];
-		m_RGB->imageData[i + 5] = 1.0 * y + 8 + 1.402 * (v - 128);          // r
-		m_RGB->imageData[i + 4] = 1.0 * y - 0.34413 * (u - 128)
-				- 0.71414 * (v - 128);   // g
-		m_RGB->imageData[i + 3] = 1.0 * y + 1.772 * (u - 128) + 0;			// b
+		m_RGB->imageData[i + 5] = cv::saturate_cast<uchar>(y+1.402*(v-128));          			 // r
+		m_RGB->imageData[i + 4] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));     // g
+		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                     // b
 	}
+
 }
 
 HRESULT DeckLinkCaptureDelegate::VideoInputFormatChanged(
