@@ -18,7 +18,6 @@ namespace imageRecognition {
 		cv::cvtColor(subrect, grayScale, CV_BGR2GRAY);
 		cv::minMaxLoc(grayScale, &minVal, &maxVal, &minloc, &maxloc);
 		cv::Vec3b color = subrect.at<cv::Vec3b>(cv::Point(maxloc));
-		std::cout<<(int)color[0]<<","<<(int)color[1]<<","<<(int)color[2]<<std::endl<<std::flush;
 		if(color.val[0] <= thresholdColor.val[0] &&
 		   color.val[1] <= thresholdColor.val[1] &&
 		   color.val[2] <= thresholdColor.val[2])
