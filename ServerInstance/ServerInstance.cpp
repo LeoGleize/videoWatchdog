@@ -55,19 +55,10 @@ namespace RestServer {
 	void wwwgrabScreen(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
 			cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
-			json::value answer;
-			answer["width"] = json::value::number(img.cols);
-			answer["height"] = json::value::number(img.rows);
-			answer["data"] = json::value::string(std::string(base64_encode(img.data, img.step[0] * img.rows)));
-			request.reply(status_codes::OK, answer);
-#ifdef DEBUG_IMAGES
-			cv::imwrite("test.png",img);
-#endif
-//			std::vector<uchar> imageData;
-//			cv::imencode(".png",img,imageData);
-//			request.headers().add("Content-type","image/png");
-//			request.reply(status_codes::OK, (char*)(&imageData[0]));
-
+			std::vector<uchar> imageData;
+			cv::imencode(".png",img,imageData);
+			std::string data(imageData.begin(), imageData.end());
+			request.reply(status_codes::OK, data, "Content-type: image/png");
 		}else{
 			json::value answer;
 			answer["error"] = json::value::number(1);
