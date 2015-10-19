@@ -6,6 +6,7 @@
  */
 
 #include "ServerInstance.h"
+#include "../recognition/imageRecognition.h"
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
 #include <iostream>
@@ -28,15 +29,7 @@ void wwwdetectState(http_request request) {
 			__screenState sState = getState(resp["timeAnalysis"].as_integer());
 			answer["MaxDiffpPixel"] = sState.maxDiffppixel;
 			answer["NormpPixel"] = sState.maxNormppixel;
-			if (sState.oState == S_LIVE_SIGNAL) {
-				answer["status"] = web::json::value::string("LIVE");
-			} else if (sState.oState == S_FREEZE_SIGNAL) {
-				answer["status"] = answer["status"] = web::json::value::string(
-						"FREEZE");
-			} else if (sState.oState == S_BLACK_SCREEN) {
-				answer["status"] = answer["status"] = web::json::value::string(
-						"BLACK");
-			}
+			answer["status"] = web::json::value::string(getNameOfState(sState.oState));
 		} else {
 			answer["error"] = 1;
 			answer["message"] = web::json::value::string(
@@ -141,13 +134,12 @@ __screenState getState(int dt_ms) {
 		maxDiff = (diff > maxDiff) ? diff : maxDiff;
 		gettimeofday(&t1, NULL);
 		//fix time: to keep an average of one frame per 50ms
-		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000
-				< 1000 * dt_interFramems)
+		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000	< 1000 * dt_interFramems)
 			usleep(1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
 	}
 
 	if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold
-			&& cv::norm(fimg) / (fimg.rows * fimg.cols) < blackThreshold) {
+			&& imageRecognition::isImageBlackScreenOrZapScreen(fimg, blackThreshold)) {
 		reply.oState = S_BLACK_SCREEN;
 	} else if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold) {
 		reply.oState = S_FREEZE_SIGNAL;
@@ -180,7 +172,6 @@ __detectScreenState detectStateChange(outputState stateSearch,
 		//deque is full therefore we can process
 		if (matList.size() == nFrames) {
 			double maxDiff = 0;
-			double avgValue = cv::norm(matList[0]);
 			unsigned int npixel = matList[0].cols * matList[0].rows;
 			cv::Mat subtractionResult;
 			for (int i = 1; i < matList.size(); i++) {
@@ -190,7 +181,6 @@ __detectScreenState detectStateChange(outputState stateSearch,
 								cv::norm(subtractionResult) : maxDiff;
 			}
 			maxDiff = maxDiff / npixel;
-			avgValue = avgValue / npixel;
 
 			if (stateSearch == S_LIVE_SIGNAL && maxDiff > freezeThreshold) {
 				matList.clear();
@@ -199,19 +189,20 @@ __detectScreenState detectStateChange(outputState stateSearch,
 				gettimeofday(&t1, NULL);
 				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
 				screenDetection.msFromStart.push_back(msFromStart);
-			} else if (stateSearch == S_FREEZE_SIGNAL
-					&& maxDiff < freezeThreshold && avgValue > blackThreshold) {
-				matList.clear();
-				screenDetection.timestamps.push_back(std::time(NULL));
-				screenDetection.found.push_back(S_FREEZE_SIGNAL);
-				gettimeofday(&t1, NULL);
-				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
-				screenDetection.msFromStart.push_back(msFromStart);
 			} else if (stateSearch == S_BLACK_SCREEN
-					&& maxDiff > freezeThreshold && avgValue < blackThreshold) {
+					&& maxDiff < freezeThreshold &&
+					imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
 				matList.clear();
 				screenDetection.timestamps.push_back(std::time(NULL));
 				screenDetection.found.push_back(S_BLACK_SCREEN);
+				gettimeofday(&t1, NULL);
+				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
+				screenDetection.msFromStart.push_back(msFromStart);
+			} else if (stateSearch == S_FREEZE_SIGNAL
+					&& maxDiff < freezeThreshold) {
+				matList.clear();
+				screenDetection.timestamps.push_back(std::time(NULL));
+				screenDetection.found.push_back(S_FREEZE_SIGNAL);
 				gettimeofday(&t1, NULL);
 				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
 				screenDetection.msFromStart.push_back(msFromStart);

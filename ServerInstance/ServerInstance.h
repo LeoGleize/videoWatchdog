@@ -9,7 +9,6 @@
 #define SERVERINSTANCE_H_
 
 #include "../blackmagic/cameradecklink.h"
-#include "base64/base64.hpp"
 #include <cpprest/http_listener.h>
 #include <opencv2/core/core.hpp>
 #include <iostream>
@@ -52,7 +51,7 @@ struct __detectScreenState{
 };
 
 const double freezeThreshold = 5000.0/(1920*1080);
-const double blackThreshold = 8000.0/(1920*1080);
+const cv::Vec3b blackThreshold(25,25,30);
 
 void wwwgrabScreen(web::http::http_request request);
 void wwwdetectState(web::http::http_request request);
