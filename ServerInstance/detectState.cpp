@@ -21,7 +21,6 @@ using namespace web::http::experimental::listener;
 namespace RestServer {
 
 void wwwdetectState(http_request request) {
-
 	json::value resp = request.extract_json().get();
 	json::value answer;
 	if (resp.has_field("timeAnalysis") && resp["timeAnalysis"].is_number()) {
