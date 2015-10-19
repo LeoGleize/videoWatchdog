@@ -51,7 +51,7 @@ namespace RestServer {
 
 	}
 
-	/*Sends screen actually being show to client (cv format maybe change that to image?)*/
+	/*Sends screen actually being show to client*/
 	void wwwgrabScreen(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
 			cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();

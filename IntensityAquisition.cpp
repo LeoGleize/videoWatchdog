@@ -47,7 +47,6 @@ int main(int argc, char **argv) {
     	if (cvWaitKey(15) >= 0)
     		continue;
     }
-
     myServer.stop();
     return 0;
 }
