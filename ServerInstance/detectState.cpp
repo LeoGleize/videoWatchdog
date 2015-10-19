@@ -10,6 +10,8 @@
 #include <cpprest/json.h>
 #include <iostream>
 #include <unistd.h>
+#include <sys/time.h>
+#include <queue>
 
 using namespace web;
 using namespace web::http;
@@ -17,77 +19,231 @@ using namespace web::http::experimental::listener;
 
 namespace RestServer {
 
-	void detectState(http_request request) {
+void wwwdetectState(http_request request) {
 
-		json::value resp = request.extract_json().get();
-		json::value answer;
-		if(resp.has_field("timeAnalysis") && resp["timeAnalysis"].is_number()){
-			if(resp["timeAnalysis"].as_integer() > 400){
-				__screenState sState = getState(resp["timeAnalysis"].as_integer());
-				answer["MaxDiffpPixel"] = sState.maxDiffppixel;
-				answer["NormpPixel"] = sState.maxNormppixel;
-				if(sState.oState == S_LIVE_SIGNAL){
-					answer["status"] = web::json::value::string("LIVE");
-				}else if(sState.oState == S_FREEZE_SIGNAL){
-					answer["status"] = answer["status"] = web::json::value::string("FREEZE");
-				}else if(sState.oState == S_BLACK_SCREEN){
-					answer["status"] = answer["status"] = web::json::value::string("BLACK");
-				}
-			}else{
-				answer["error"] = 1;
-				answer["message"] = web::json::value::string("Variable 'timeAnalysis' has to be greater than 400ms");
+	json::value resp = request.extract_json().get();
+	json::value answer;
+	if (resp.has_field("timeAnalysis") && resp["timeAnalysis"].is_number()) {
+		if (resp["timeAnalysis"].as_integer() > 400) {
+			__screenState sState = getState(resp["timeAnalysis"].as_integer());
+			answer["MaxDiffpPixel"] = sState.maxDiffppixel;
+			answer["NormpPixel"] = sState.maxNormppixel;
+			if (sState.oState == S_LIVE_SIGNAL) {
+				answer["status"] = web::json::value::string("LIVE");
+			} else if (sState.oState == S_FREEZE_SIGNAL) {
+				answer["status"] = answer["status"] = web::json::value::string(
+						"FREEZE");
+			} else if (sState.oState == S_BLACK_SCREEN) {
+				answer["status"] = answer["status"] = web::json::value::string(
+						"BLACK");
 			}
-
-		}else{
+		} else {
 			answer["error"] = 1;
-			answer["message"] = web::json::value::string("This request needs one value: 'timeAnalysis' the time in milliseconds that the video output will be evaluated");
+			answer["message"] = web::json::value::string(
+					"Variable 'timeAnalysis' has to be greater than 400ms");
 		}
-		request.reply(status_codes::OK, answer);
+
+	} else {
+		answer["error"] = 1;
+		answer["message"] =
+				web::json::value::string(
+						"This request needs one value: 'timeAnalysis' the time in milliseconds that the video output will be evaluated");
 	}
-
-
-	/*	Return the state of the screen after an dt_ms long analysis
-	 * 	during this analysis a frame will be captured every dt_interFramems
-	 */
-	__screenState getState(int dt_ms){
-		__screenState reply;
-		int dt_interFramems = 50; //one shot per 50ms
-		//threshold for a 1080p is 5000 this is done so there won't be a
-		//in results for different resolutions
-		double freezeThreshold = 5000.0/(1920*1080);
-		double blackThreshold = 8000.0/(1920*1080);
-		int nReadings = dt_ms / dt_interFramems;
-
-		cv::Mat imgcmp, subResult;
-		cv::Mat fimg;
-		double maxDiff = 0, diff;
-		//create a DEEP copy of the first image
-		fimg = ServerInstance::cameraDeckLink->captureLastCvMat();
-		for(int i = 0; i < nReadings; i++){
-			usleep(1000* dt_interFramems);
-			imgcmp = ServerInstance::cameraDeckLink->captureLastCvMat();
-			cv::subtract(imgcmp, fimg, subResult);
-			diff = cv::norm(subResult);
-			maxDiff = (diff > maxDiff)?diff:maxDiff;
-#ifdef DEBUG_IMAGES
-			std::string fname = "test" + std::to_string(i) + "_" +  std::to_string((int)diff) + ".jpg";
-			cv::imwrite(fname, subResult);
-#endif
-			std::cout << "Norm diff = " << diff << std::endl;
-		}
-		if(maxDiff/(fimg.rows * fimg.cols) < freezeThreshold &&
-		   cv::norm(fimg)/(fimg.rows * fimg.cols) < blackThreshold){
-			reply.oState = S_BLACK_SCREEN;
-		}else if(maxDiff/(fimg.rows * fimg.cols) < freezeThreshold){
-			reply.oState = S_FREEZE_SIGNAL;
-		}else{
-			reply.oState = S_LIVE_SIGNAL;
-		}
-		reply.maxDiffppixel = maxDiff/(fimg.rows * fimg.cols);
-		reply.maxNormppixel = cv::norm(fimg)/(fimg.rows * fimg.cols);
-		return reply;
-	}
-
-
+	request.reply(status_codes::OK, answer);
 }
-;
+
+void wwwdetectEvent(http_request request) {
+
+	json::value params = request.extract_json().get();
+	json::value reply;
+
+	if (params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
+			&& params.has_field("eventType") && params["eventType"].is_string()
+			&& params.has_field("timeEvent") && params["timeEvent"].is_integer()) {
+		if (params["timeAnalysis"].as_integer() < 2000) {
+			reply["error"] = 1;
+			reply["message"] = web::json::value::string(
+					"'timeAnalysis' needs to be greater than 2000ms");
+		} else if (params["eventType"].as_string() != "FREEZE"
+				&& params["eventType"].as_string() != "LIVE"
+				&& params["eventType"].as_string() != "BLACK") {
+			reply["error"] = 1;
+			reply["message"] = web::json::value::string(
+					"Valid 'eventType' are 'BLACK', 'LIVE' and 'FREEZE'");
+		} else if (params["timeEvent"].as_integer() > 500
+				|| params["timeEvent"].as_integer()
+						> params["timeAnalysis"].as_integer()) {
+			reply["error"] = 1;
+			std::string message =
+					"'timeEvent' has to be bigger than 500 and smaller than 'timeAnalysis'";
+			reply["message"] = web::json::value::string(message);
+		} else {
+			bool count = false;
+			if(params.has_field("count") && params["count"].is_boolean()){
+				count = params["count"].as_bool();
+			}
+			outputState searchState;
+			if(params["eventType"].as_string() == "FREEZE")
+				searchState = S_FREEZE_SIGNAL;
+			else if(params["eventType"].as_string() == "LIVE")
+				searchState = S_LIVE_SIGNAL;
+			else if(params["eventType"].as_string() == "BLACK")
+				searchState = S_BLACK_SCREEN;
+			__detectScreenState state = detectStateChange(searchState,
+														  params["timeAnalysis"].as_integer(),
+														  params["timeEvent"].as_integer(),
+														  count);
+			//process output
+			for(int i = 0; i < state.found.size(); i++){
+				json::value tempObj;
+				tempObj["foundState"] = web::json::value::string(getNameOfState(state.found[i]));
+				tempObj["timeFromStartMs"] = web::json::value::number(state.msFromStart[i]);
+				reply["foundState"][i] = tempObj;
+			}
+			reply["error"] = 0;
+		}
+	} else {
+		reply["error"] = 1;
+		std::string message = "This request needs three parameters: 'timeAnalysis' the time in" \
+						      " milliseconds that the video output will be evaluated, 'eventType' " \
+						      "the type of event we are looking for and 'timeEvent': how long the " \
+						      "event will need to be seen to get an occurrence";
+		reply["message"] = web::json::value::string(message);
+	}
+	request.reply(status_codes::OK, reply);
+}
+
+/*
+ *  Return the state of the screen after an dt_ms long analysis
+ * 	during this analysis a frame will be captured every dt_interFramems
+ */
+__screenState getState(int dt_ms) {
+	__screenState reply;
+	int dt_interFramems = 100; //one shot per 100ms = we'll try to keep 10fps on average
+
+	//threshold for a 1080p is 5000 this is done so there won't be
+	//different results for different resolutions
+	int nReadings = dt_ms / dt_interFramems;
+
+	cv::Mat imgcmp, subResult;
+	cv::Mat fimg;
+	double maxDiff = 0, diff;
+	timeval t0, t1;
+
+	fimg = ServerInstance::cameraDeckLink->captureLastCvMat();
+
+	for (int i = 0; i < nReadings; i++) {
+		gettimeofday(&t0, NULL);
+
+		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMat();
+		cv::subtract(imgcmp, fimg, subResult);
+		diff = cv::norm(subResult);
+		maxDiff = (diff > maxDiff) ? diff : maxDiff;
+		gettimeofday(&t1, NULL);
+		//fix time: to keep an average of one frame per 50ms
+		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000
+				< 1000 * dt_interFramems)
+			usleep(1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
+	}
+
+	if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold
+			&& cv::norm(fimg) / (fimg.rows * fimg.cols) < blackThreshold) {
+		reply.oState = S_BLACK_SCREEN;
+	} else if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold) {
+		reply.oState = S_FREEZE_SIGNAL;
+	} else {
+		reply.oState = S_LIVE_SIGNAL;
+	}
+	reply.maxDiffppixel = maxDiff / (fimg.rows * fimg.cols);
+	reply.maxNormppixel = cv::norm(fimg) / (fimg.rows * fimg.cols);
+	return reply;
+}
+
+__detectScreenState detectStateChange(outputState stateSearch,
+									  unsigned int timeAnalysis,
+									  unsigned int timeEvent,
+									  bool countOc) {
+	__detectScreenState screenDetection;
+	int dt_interFramems = 100; //one shot per 100ms = we'll try to keep 10fps on average
+	int nFrames = timeEvent / 100;
+	int nReadings = timeAnalysis / 100;
+	std::deque<cv::Mat> matList;
+	timeval t0, t1, tStart;
+	unsigned int msFromStart;
+	gettimeofday(&tStart, NULL);
+	for (int i = 0; i < nReadings; i++) {
+		gettimeofday(&t0, NULL);
+		matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
+		if (matList.size() > nFrames) {
+			matList.pop_front();
+		}
+		//deque is full therefore we can process
+		if (matList.size() == nFrames) {
+			double maxDiff = 0;
+			double avgValue = cv::norm(matList[0]);
+			unsigned int npixel = matList[0].cols * matList[0].rows;
+			cv::Mat subtractionResult;
+			for (int i = 1; i < matList.size(); i++) {
+				cv::subtract(matList[i], matList[0], subtractionResult);
+				maxDiff =
+						(cv::norm(subtractionResult) > maxDiff) ?
+								cv::norm(subtractionResult) : maxDiff;
+			}
+			maxDiff = maxDiff / npixel;
+			avgValue = avgValue / npixel;
+
+			if (stateSearch == S_LIVE_SIGNAL && maxDiff > freezeThreshold) {
+				matList.clear();
+				screenDetection.timestamps.push_back(std::time(NULL));
+				screenDetection.found.push_back(S_LIVE_SIGNAL);
+				gettimeofday(&t1, NULL);
+				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
+				screenDetection.msFromStart.push_back(msFromStart);
+			} else if (stateSearch == S_FREEZE_SIGNAL
+					&& maxDiff < freezeThreshold && avgValue > blackThreshold) {
+				matList.clear();
+				screenDetection.timestamps.push_back(std::time(NULL));
+				screenDetection.found.push_back(S_FREEZE_SIGNAL);
+				gettimeofday(&t1, NULL);
+				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
+				screenDetection.msFromStart.push_back(msFromStart);
+			} else if (stateSearch == S_BLACK_SCREEN
+					&& maxDiff > freezeThreshold && avgValue < blackThreshold) {
+				matList.clear();
+				screenDetection.timestamps.push_back(std::time(NULL));
+				screenDetection.found.push_back(S_BLACK_SCREEN);
+				gettimeofday(&t1, NULL);
+				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
+				screenDetection.msFromStart.push_back(msFromStart);
+			}
+		}
+
+		gettimeofday(&t1, NULL);
+
+		if(countOc == false && screenDetection.found.size() > 0)
+			return screenDetection;
+
+		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 < 1000 * dt_interFramems)
+			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
+	}
+	return screenDetection;
+}
+
+std::string getNameOfState(outputState o){
+	switch(o){
+		case S_LIVE_SIGNAL:
+			return "Live signal";
+		case S_FREEZE_SIGNAL:
+			return "Freeze";
+		case S_NOT_FOUND:
+			return "Output not found";
+		case S_NO_VIDEO:
+			return "No video";
+		case S_BLACK_SCREEN:
+			return "Black Screen";
+
+	}
+	return "Not found";
+}
+
+};

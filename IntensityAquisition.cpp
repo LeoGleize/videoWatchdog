@@ -35,13 +35,16 @@ int main(int argc, char **argv) {
     camera1 = new CameraDecklink();
     RestServer::ServerInstance::cameraDeckLink = camera1;
     myServer.start();
+
+    //we wont be timing this since this is just to give an idea to the user of what is going
+    //on on the STB screen
     while (true) {
     	if(showScreen){
     		cv::Mat img = camera1->captureLastCvMat();
     		cv::imshow("camera1", img);
     	}
 
-    	if (cvWaitKey(10) >= 0)
+    	if (cvWaitKey(15) >= 0)
     		continue;
     }
 
