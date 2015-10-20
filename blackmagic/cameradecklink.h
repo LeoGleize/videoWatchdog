@@ -5,7 +5,11 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <mutex>
+#include "cardexceptions.h"
+#include <exception>
 #define FIX_RESOLUTION
+
+enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
 
 class DeckLinkCaptureDelegate: public IDeckLinkInputCallback {
 public:
@@ -37,6 +41,7 @@ public:
 
 private:
 	ULONG m_refCount;
+	FRAME_STATE frameState;
 	pthread_mutex_t m_mutex;
 	IplImage* lastImage;
 

@@ -3,6 +3,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <stdexcept>
+#include "cardexceptions.h"
 
 using namespace std;
 
@@ -145,15 +147,24 @@ IplImage* CameraDecklink::captureLastFrame() {
 
 cv::Mat CameraDecklink::captureLastCvMat() {
 	mutexCallOnce.lock();
-	IplImage* img = captureLastFrame();
-	cv::Mat mat = cv::cvarrToMat(img).clone(); //free???
-	cvRelease((void**) &img);
-    mutexCallOnce.unlock();
-	return mat;
+	/*Try to read last image, in case of exception release the mutex
+	 * and throw exception to the next level
+	 */
+	try{
+		IplImage* img = captureLastFrame();
+		cv::Mat mat = cv::cvarrToMat(img).clone(); //free???
+		cvRelease((void**) &img);
+		mutexCallOnce.unlock();
+		return mat;
+	}catch(const CardException &ex){
+		mutexCallOnce.unlock();
+		throw ex;
+	}
 }
 
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate() :
 		m_refCount(0) {
+	this->frameState = DECKLINK_VIDEO_OK;
 	pthread_mutex_init(&m_mutex, NULL);
 
 	lastImage = 0;
@@ -198,9 +209,9 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 		IDeckLinkAudioInputPacket* audioFrame) {
 	IDeckLinkVideoFrame* rightEyeFrame = NULL;
 	IDeckLinkVideoFrame3DExtensions* threeDExtensions = NULL;
+	frameState = DECKLINK_VIDEO_OK;
 	unsigned char * pData;
 	void* audioFrameBytes;
-
 	// Handle Video Frame
 	if (videoFrame) // && !stopped)
 	{
@@ -220,6 +231,7 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 			fprintf(stderr,
 					"Frame received (#%lu) - No input signal detected\n",
 					frameCount);
+			frameState = DECKLINK_NO_VIDEO_INPUT;
 		} else {
 			const char *timecodeString = NULL;
 			if (g_timecodeFormat != 0) {
@@ -261,14 +273,17 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 		//            pthread_cond_signal(&sleepCond);
 		//        }
 	}
-
 	return S_OK;
 }
 
 IplImage* DeckLinkCaptureDelegate::getLastImage() {
-	lastImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
-	convertFrameToOpenCV(frameBytes, lastImage);
-	return lastImage;
+	if(frameState == DECKLINK_NO_VIDEO_INPUT){
+		throw CardException("No video input", NO_INPUT_EXCEPTION);
+	}else{
+		lastImage = cvCreateImage(cvSize(width, height), IPL_DEPTH_8U, 3);
+		convertFrameToOpenCV(frameBytes, lastImage);
+		return lastImage;
+	}
 }
 
 //TOFIX: clamping of values once they are out of range! (will it solve color distortions?)
@@ -290,9 +305,9 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		m_RGB->imageData[i] = cv::saturate_cast<uchar>(y+1.772*(u-128));                       // b
 
 		y = pData[j + 3];
-		m_RGB->imageData[i + 5] = cv::saturate_cast<uchar>(y+1.402*(v-128));          			 // r
-		m_RGB->imageData[i + 4] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));     // g
-		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                     // b
+		m_RGB->imageData[i + 5] = cv::saturate_cast<uchar>(y+1.402*(v-128));          			// r
+		m_RGB->imageData[i + 4] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));    // g
+		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                    // b
 	}
 
 }

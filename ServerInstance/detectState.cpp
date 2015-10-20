@@ -122,7 +122,13 @@ __screenState getState(int dt_ms) {
 	double maxDiff = 0, diff;
 	timeval t0, t1;
 
-	fimg = ServerInstance::cameraDeckLink->captureLastCvMat();
+	try{
+		fimg = ServerInstance::cameraDeckLink->captureLastCvMat();
+	}catch(const CardException &d){
+		if(d.getExceptionType() == NO_INPUT_EXCEPTION)
+			reply.oState = S_NO_VIDEO;
+		return reply;
+	}
 
 	for (int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
@@ -164,7 +170,11 @@ __detectScreenState detectStateChange(outputState stateSearch,
 	gettimeofday(&tStart, NULL);
 	for (int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
-		matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
+		try{
+			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
+		}catch(const CardException &e){
+			usleep(	1000 * dt_interFramems);
+		}
 		if (matList.size() > nFrames) {
 			matList.pop_front();
 		}
