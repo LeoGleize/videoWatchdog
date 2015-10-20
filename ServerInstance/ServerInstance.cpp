@@ -54,11 +54,18 @@ namespace RestServer {
 	/*Sends screen actually being show to client*/
 	void wwwgrabScreen(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
-			cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
-			std::vector<uchar> imageData;
-			cv::imencode(".png",img,imageData);
-			std::string data(imageData.begin(), imageData.end());
-			request.reply(status_codes::OK, data, "Content-type: image/png");
+			try{
+				cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
+				std::vector<uchar> imageData;
+				cv::imencode(".png",img,imageData);
+				std::string data(imageData.begin(), imageData.end());
+				request.reply(status_codes::OK, data, "Content-type: image/png");
+			}catch(const CardException &e){
+				json::value answer;
+				answer["error"] = json::value::number(1);
+				answer["message"] = json::value::string("Exception on camera access:" + std::string(e.what()));
+				request.reply(status_codes::OK, answer);
+			}
 		}else{
 			json::value answer;
 			answer["error"] = json::value::number(1);
