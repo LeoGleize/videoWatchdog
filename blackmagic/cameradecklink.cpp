@@ -5,6 +5,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <stdexcept>
 #include "cardexceptions.h"
+#include <unistd.h>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -32,6 +34,7 @@ CameraDecklink::CameraDecklink() {
 	return;
 
 }
+
 
 void CameraDecklink::bail(){
 	if (deckLink != NULL) {
@@ -210,7 +213,6 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 	IDeckLinkVideoFrame* rightEyeFrame = NULL;
 	IDeckLinkVideoFrame3DExtensions* threeDExtensions = NULL;
 	frameState = DECKLINK_VIDEO_OK;
-	unsigned char * pData;
 	void* audioFrameBytes;
 	// Handle Video Frame
 	if (videoFrame) // && !stopped)
@@ -234,30 +236,20 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 			frameState = DECKLINK_NO_VIDEO_INPUT;
 		} else {
 			const char *timecodeString = NULL;
+
 			if (g_timecodeFormat != 0) {
 				IDeckLinkTimecode *timecode;
 				if (videoFrame->GetTimecode(g_timecodeFormat, &timecode) == S_OK) {
 					timecode->GetString(&timecodeString);
 				}
 			}
-//
-//            fprintf(stderr, "Frame received (#%lu) [%s] - %s - Size: %li bytes\n",
-//                    frameCount,
-//                    timecodeString != NULL ? timecodeString : "No timecode",
-//                    rightEyeFrame != NULL ? "Valid Frame (3D left/right)" : "Valid Frame",
-//                    videoFrame->GetRowBytes() * videoFrame->GetHeight());
-
+//			printf("#%lu frame received: [%s] - Pointer = 0x%x - size = %d px\n",frameCount,
+//					timecodeString != NULL ? timecodeString : "No timecode", videoFrame, videoFrame->GetHeight() * videoFrame->GetWidth());
 			if (timecodeString)
 				free((void*) timecodeString);
 
 			videoFrame->GetBytes(&frameBytes);
-			//            converting = true;
-			//            lastImage = cvCreateImage(cvSize(1920, 1080), IPL_DEPTH_8U, 3);
-			//            converting = false;
-			//            CameraDecklink::convertFrameToOpenCV(frameBytes, lastImage);
 
-			//                cvShowImage("Hola", lastImage);
-			//                cvWaitKey(27);
 		}
 
 		if (rightEyeFrame)

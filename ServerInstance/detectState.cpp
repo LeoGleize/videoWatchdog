@@ -49,9 +49,9 @@ void wwwdetectEvent(http_request request) {
 	json::value params = request.extract_json().get();
 	json::value reply;
 
-	if (params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
-			&& params.has_field("eventType") && params["eventType"].is_string()
-			&& params.has_field("timeEvent") && params["timeEvent"].is_integer()) {
+	if ( params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
+	  && params.has_field("eventType") && params["eventType"].is_string()
+	  && params.has_field("timeEvent") && params["timeEvent"].is_integer()) {
 		if (params["timeAnalysis"].as_integer() < 2000) {
 			reply["error"] = 1;
 			reply["message"] = web::json::value::string(
@@ -62,7 +62,7 @@ void wwwdetectEvent(http_request request) {
 			reply["error"] = 1;
 			reply["message"] = web::json::value::string(
 					"Valid 'eventType' are 'BLACK', 'LIVE' and 'FREEZE'");
-		} else if (params["timeEvent"].as_integer() > 500
+		} else if (params["timeEvent"].as_integer() < 500
 				|| params["timeEvent"].as_integer()
 						> params["timeAnalysis"].as_integer()) {
 			reply["error"] = 1;
@@ -174,6 +174,8 @@ __detectScreenState detectStateChange(outputState stateSearch,
 			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
 		}catch(const CardException &e){
 			usleep(	1000 * dt_interFramems);
+			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl<<std::flush;
+			continue;
 		}
 		if (matList.size() > nFrames) {
 			matList.pop_front();
@@ -208,7 +210,13 @@ __detectScreenState detectStateChange(outputState stateSearch,
 				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
 				screenDetection.msFromStart.push_back(msFromStart);
 			} else if (stateSearch == S_FREEZE_SIGNAL
-					&& maxDiff < freezeThreshold) {
+					&& maxDiff < freezeThreshold
+					&& !imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
+
+//				for(int i = 0; i < matList.size(); i++){
+//					cv::imwrite("test"+ std::to_string(i)+ ".png",matList[0]);
+//				}
+
 				matList.clear();
 				screenDetection.timestamps.push_back(std::time(NULL));
 				screenDetection.found.push_back(S_FREEZE_SIGNAL);
@@ -225,6 +233,8 @@ __detectScreenState detectStateChange(outputState stateSearch,
 
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 < 1000 * dt_interFramems)
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
+		else
+			std::cout<<"NOT SLEEPING!!!!"<<std::endl;
 	}
 	return screenDetection;
 }
