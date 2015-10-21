@@ -7,6 +7,7 @@
 #include <mutex>
 #include "cardexceptions.h"
 #include <exception>
+#include <thread>
 #define FIX_RESOLUTION
 
 enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
@@ -57,13 +58,12 @@ public:
 
 	IplImage * captureLastFrame();
 	cv::Mat captureLastCvMat();
-
 private:
 	IDeckLink *deckLink;
 	IDeckLinkIterator *deckLinkIterator;
-
 	DeckLinkCaptureDelegate *delegate;
 	std::mutex mutexCallOnce;
+	std::mutex threadMutexAcquire;
 	IDeckLinkInput *deckLinkInput;
 	IDeckLinkDisplayModeIterator *displayModeIterator;
 	IDeckLinkDisplayMode *displayMode;
