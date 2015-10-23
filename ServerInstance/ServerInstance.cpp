@@ -29,6 +29,10 @@ namespace RestServer {
 		web::uri myRoute3("http://localhost:8080/getScreenEvent");
 		myListeners.push_back(http_listener(myRoute3));
 		myListeners[2].support(methods::POST, wwwdetectEvent);
+
+		web::uri myRoute4("http://localhost:8080/checkForImage");
+		myListeners.push_back(http_listener(myRoute4));
+		myListeners[3].support(methods::POST, wwwcheckimage);
 	}
 
 	ServerInstance::~ServerInstance() {

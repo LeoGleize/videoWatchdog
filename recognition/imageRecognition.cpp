@@ -7,6 +7,7 @@
 
 #include "imageRecognition.h"
 #include <iostream>
+#include <opencv2/features2d.hpp>
 
 namespace imageRecognition {
 
@@ -32,4 +33,20 @@ namespace imageRecognition {
 		return false;
 	}
 
-} /* namespace RestServer */
+	objMatch matchTemplateMultiscale(cv::Mat &img, cv::Mat &templ){
+		objMatch match;
+		cv::Mat result;
+		cv::matchTemplate(img,templ,result,CV_TM_CCORR_NORMED);
+		double minv, maxv;
+		cv::Point min, max;
+		cv::minMaxLoc(result, &minv, &maxv, &min,&max);
+		match.matchScore = maxv;
+		match.pos.x = max.x;
+		match.pos.y = max.y;
+		match.pos.width = templ.cols;
+		match.pos.height = templ.rows;
+		match.scale = 1;
+		return match;
+	}
+
+}
