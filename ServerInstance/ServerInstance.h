@@ -57,6 +57,7 @@ void wwwgrabScreen(web::http::http_request request);
 void wwwdetectState(web::http::http_request request);
 void wwwdetectEvent(web::http::http_request request);
 void wwwcountEvents(web::http::http_request request);
+void wwwcheckimage(web::http::http_request request);
 __screenState getState(int dt_ms);
 __detectScreenState detectStateChange(outputState stateSearch, unsigned int timeAnalysis,unsigned int timeEvent,bool countOc);
 } /* namespace RestServer */

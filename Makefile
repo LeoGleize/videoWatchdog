@@ -3,7 +3,7 @@ CXXFLAGS =	-O4 -g -Wall -fmessage-length=0  -std=c++11
 
 OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/DeckLinkAPIDispatch.o \
 			ServerInstance/ServerInstance.o ServerInstance/detectState.o recognition/imageRecognition.o \
-			blackmagic/cardexceptions.o
+			blackmagic/cardexceptions.o ServerInstance/checkImage.o
 			
 
 LIBS = 		`pkg-config --libs opencv` -lopencv_highgui -ldl -lpthread -fopenmp -lboost_system -lboost_thread -lcpprest

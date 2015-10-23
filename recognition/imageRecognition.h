@@ -12,6 +12,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
+#include <cpprest/json.h>
 
 /*
  * Suite of functions for image recognition and processing
@@ -20,6 +21,23 @@
 
 namespace imageRecognition {
 
+class objMatch{
+public:
+	double matchScore;
+	cv::Rect pos;
+	double scale;
+
+	web::json::value toJSON(){
+		web::json::value v;
+		v["matchScore"] = web::json::value::number(matchScore);
+		v["x"] = pos.x;
+		v["y"] = pos.y;
+		v["width"] = pos.width;
+		v["height"] = pos.height;
+		return v;
+	}
+};
+
 /**
  * Checks if a image has a black background, will cut a rectangle
  * in the image ignoring the bottom menu and top screen with time
@@ -27,6 +45,7 @@ namespace imageRecognition {
  * true
  */
 bool isImageBlackScreenOrZapScreen(cv::Mat &img,const cv::Vec3b &thresholdColor);
+objMatch matchTemplateMultiscale(cv::Mat &img, cv::Mat &templ);
 
 } /* namespace RestServer */
 
