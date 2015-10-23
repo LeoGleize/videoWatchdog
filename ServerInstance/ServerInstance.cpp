@@ -18,19 +18,19 @@ namespace RestServer {
 
 	ServerInstance::ServerInstance() {
 		std::cout<<"Starting server on http://localhost:8080"<<std::endl;
-		web::uri myRoute("http://localhost:8080/image");
+		web::uri myRoute("http://0.0.0.0:8080/image");
 		myListeners.push_back(http_listener(myRoute));
 		myListeners[0].support(methods::GET, wwwgrabScreen);
 
-		web::uri myRoute2("http://localhost:8080/status");
+		web::uri myRoute2("http://0.0.0.0:8080/status");
 		myListeners.push_back(http_listener(myRoute2));
 		myListeners[1].support(methods::POST, wwwdetectState);
 
-		web::uri myRoute3("http://localhost:8080/getScreenEvent");
+		web::uri myRoute3("http://0.0.0.0:8080/getScreenEvent");
 		myListeners.push_back(http_listener(myRoute3));
 		myListeners[2].support(methods::POST, wwwdetectEvent);
 
-		web::uri myRoute4("http://localhost:8080/checkForImage");
+		web::uri myRoute4("http://0.0.0.0:8080/checkForImage");
 		myListeners.push_back(http_listener(myRoute4));
 		myListeners[3].support(methods::POST, wwwcheckimage);
 	}
