@@ -26,6 +26,7 @@ using namespace web::http::experimental::listener;
 struct imageReconData{
 	cv::Mat originalImage;
 	bool isValidImage;
+	std::string exception;
 	imageRecognition::objMatch match;
 };
 
@@ -41,7 +42,7 @@ void wwwcheckimage(web::http::http_request request){
 		web::http::client::http_client client(url);
 		http_request myrequest(methods::GET);
 
-		//create request task (promise)
+		//create request task (similar to JS promises)
 	    pplx::task<imageReconData> requestTask = client.request(myrequest).then([](http_response response)
 	    {
 	        // Print the status code.
@@ -61,6 +62,7 @@ void wwwcheckimage(web::http::http_request request){
 	        return bodyStream.read(inStringBuffer, lenght).then([inStringBuffer](size_t bytesRead)
 	        {
 	        	imageReconData imrData;
+	        	imrData.isValidImage = true;
 	            const std::string &imData = inStringBuffer.collection();
 	            //try to get image from screen
 	            cv::Mat screen;
@@ -68,6 +70,7 @@ void wwwcheckimage(web::http::http_request request){
 	            	screen = ServerInstance::cameraDeckLink->captureLastCvMat();
 	            }catch(CardException &e){
 	            	imrData.isValidImage = false;
+	            	imrData.exception = e.what();
 	            	return imrData;
 	            }
 
@@ -78,7 +81,7 @@ void wwwcheckimage(web::http::http_request request){
 		        cv::Mat templateBorder, imageBorder;
 		        cv::Canny(pattern,templateBorder,100,100);
 		        cv::Canny(bwScreen,imageBorder,100,100);
-		        imrData.match = imageRecognition::matchTemplateMultiscale(imageBorder,templateBorder);
+		        imrData.match = imageRecognition::matchTemplateSameScale(imageBorder,templateBorder);
 		        imrData.originalImage = screen;
 		        cv::Point pt1(imrData.match.pos.x,imrData.match.pos.y);
 		        cv::Point pt2(imrData.match.pos.x + imrData.match.pos.width,imrData.match.pos.y + imrData.match.pos.height);
@@ -103,15 +106,14 @@ void wwwcheckimage(web::http::http_request request){
 				std::string data(imageData.begin(), imageData.end());
 				request.reply(status_codes::OK, data, "Content-type: image/png");
 			}else{
-				//TODO: return parameters
 				reply["error"] = 0;
 				reply["match"] = res.match.toJSON();
-
 				request.reply(status_codes::OK, reply);
 			}
 	    }else{
 	    	reply["error"] = 1;
 	    	reply["message"] = web::json::value::string("imageURL returned an invalid image");
+	    	reply["exception"] = web::json::value::string(res.exception);
 	    	request.reply(status_codes::OK, reply);
 	    }
 	}else{

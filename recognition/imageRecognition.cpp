@@ -1,5 +1,5 @@
 /*
- * imageRecognition.cpp
+x * imageRecognition.cpp
  *
  *  Created on: Oct 19, 2015
  *      Author: fcaldas
@@ -19,12 +19,6 @@ namespace imageRecognition {
 		cv::cvtColor(subrect, grayScale, CV_BGR2GRAY);
 		cv::minMaxLoc(grayScale, &minVal, &maxVal, &minloc, &maxloc);
 		cv::Vec3b color = subrect.at<cv::Vec3b>(cv::Point(maxloc));
-//		cv::imwrite("subrect.png",subrect);
-//		std::cout<<"Maxloc = "<<maxloc.x<<","<<maxloc.y<<std::endl;
-//		std::cout<<"Max v = "<<(int)color.val[0] << ","<<(int)color.val[1] <<","<<(int)color.val[2]<<std::endl;
-//		std::cout<<"Max vs= "<<color.val[0] << ","<<color.val[1] <<","<<color.val[2]<<std::endl;
-//		std::cout<<"Max t = "<<(int)thresholdColor.val[0] << ","<<(int)thresholdColor.val[1] <<","<<(int)thresholdColor.val[2]<<std::endl;
-//		std::cout<<"Max ts= "<<thresholdColor.val[0] << ","<<thresholdColor.val[1] <<","<<thresholdColor.val[2]<<std::endl;
 		if((int)color.val[0] <= (int)thresholdColor.val[0] &&
 		   (int)color.val[1] <= (int)thresholdColor.val[1] &&
 		   (int)color.val[2] <= (int)thresholdColor.val[2]){
@@ -33,7 +27,13 @@ namespace imageRecognition {
 		return false;
 	}
 
-	objMatch matchTemplateMultiscale(cv::Mat &img, cv::Mat &templ){
+	/**
+	 * Searches for the cv::Mat templ on the cv::Mat img, returns the best match
+	 * found on img on an objMatch object with the score of the best match and position
+	 * scale is always one since this method ONLY SEARCHES for images with the same
+	 * dimensions
+	 */
+	objMatch matchTemplateSameScale(cv::Mat &img, cv::Mat &templ){
 		objMatch match;
 		cv::Mat result;
 		cv::matchTemplate(img,templ,result,CV_TM_CCORR_NORMED);

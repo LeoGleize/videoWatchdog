@@ -62,7 +62,6 @@ int main(int argc, char **argv) {
 			    			 cv::Scalar(250,250,250)
 			    		   );
 			}
-
 			if (!resize){
 				cv::imshow("R7IntensityProServer", img);
 			}else {

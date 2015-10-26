@@ -51,7 +51,7 @@ struct __detectScreenState{
 };
 
 const double freezeThreshold = 5000.0/(1920*1080);
-const cv::Vec3b blackThreshold(25,25,30);
+const cv::Vec3b blackThreshold(35,35,35);
 
 void wwwgrabScreen(web::http::http_request request);
 void wwwdetectState(web::http::http_request request);

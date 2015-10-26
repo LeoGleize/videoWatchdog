@@ -49,27 +49,25 @@ void wwwdetectEvent(http_request request) {
 	json::value params = request.extract_json().get();
 	json::value reply;
 
+	//check for parameters on received POST request
 	if ( params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
 	  && params.has_field("eventType") && params["eventType"].is_string()
 	  && params.has_field("timeEvent") && params["timeEvent"].is_integer()) {
 		if (params["timeAnalysis"].as_integer() < 2000) {
 			reply["error"] = 1;
-			reply["message"] = web::json::value::string(
-					"'timeAnalysis' needs to be greater than 2000ms");
+			reply["message"] = web::json::value::string("'timeAnalysis' needs to be greater than 2000ms");
 		} else if (params["eventType"].as_string() != "FREEZE"
 				&& params["eventType"].as_string() != "LIVE"
 				&& params["eventType"].as_string() != "BLACK") {
 			reply["error"] = 1;
-			reply["message"] = web::json::value::string(
-					"Valid 'eventType' are 'BLACK', 'LIVE' and 'FREEZE'");
+			reply["message"] = web::json::value::string("Valid 'eventType' are 'BLACK', 'LIVE' and 'FREEZE'");
 		} else if (params["timeEvent"].as_integer() < 500
-				|| params["timeEvent"].as_integer()
-						> params["timeAnalysis"].as_integer()) {
+				|| params["timeEvent"].as_integer()	> params["timeAnalysis"].as_integer()) {
 			reply["error"] = 1;
-			std::string message =
-					"'timeEvent' has to be bigger than 500 and smaller than 'timeAnalysis'";
+			std::string message = "'timeEvent' has to be bigger than 500 and smaller than 'timeAnalysis'";
 			reply["message"] = web::json::value::string(message);
 		} else {
+			//if everything is ok we then proceed to launch the process
 			bool count = false;
 			if(params.has_field("count") && params["count"].is_boolean()){
 				count = params["count"].as_bool();
@@ -130,7 +128,7 @@ __screenState getState(int dt_ms) {
 		return reply;
 	}
 
-	for (int i = 0; i < nReadings; i++) {
+	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 
 		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMat();
@@ -163,12 +161,12 @@ __detectScreenState detectStateChange(outputState stateSearch,
 	__detectScreenState screenDetection;
 	int dt_interFramems = 100; //one shot per 100ms = we'll try to keep 10fps on average
 	int nFrames = timeEvent / 100;
-	int nReadings = timeAnalysis / 100;
+	unsigned int nReadings = timeAnalysis / 100;
 	std::deque<cv::Mat> matList;
 	timeval t0, t1, tStart;
 	unsigned int msFromStart;
 	gettimeofday(&tStart, NULL);
-	for (int i = 0; i < nReadings; i++) {
+	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 		try{
 			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
@@ -186,10 +184,13 @@ __detectScreenState detectStateChange(outputState stateSearch,
 			unsigned int npixel = matList[0].cols * matList[0].rows;
 			cv::Mat subtractionResult;
 			for (int i = 1; i < matList.size(); i++) {
+				double n1,n2;
+				cv::subtract(matList[0], matList[i], subtractionResult);
+				n1 = cv::norm(subtractionResult);
 				cv::subtract(matList[i], matList[0], subtractionResult);
-				maxDiff =
-						(cv::norm(subtractionResult) > maxDiff) ?
-								cv::norm(subtractionResult) : maxDiff;
+				n2 = cv::norm(subtractionResult);
+				maxDiff = (n1 > maxDiff) ? n1 : maxDiff;
+				maxDiff = (n2 > maxDiff) ? n2 : maxDiff;
 			}
 			maxDiff = maxDiff / npixel;
 
@@ -212,11 +213,6 @@ __detectScreenState detectStateChange(outputState stateSearch,
 			} else if (stateSearch == S_FREEZE_SIGNAL
 					&& maxDiff < freezeThreshold
 					&& !imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
-
-//				for(int i = 0; i < matList.size(); i++){
-//					cv::imwrite("test"+ std::to_string(i)+ ".png",matList[0]);
-//				}
-
 				matList.clear();
 				screenDetection.timestamps.push_back(std::time(NULL));
 				screenDetection.found.push_back(S_FREEZE_SIGNAL);
@@ -225,16 +221,14 @@ __detectScreenState detectStateChange(outputState stateSearch,
 				screenDetection.msFromStart.push_back(msFromStart);
 			}
 		}
-
 		gettimeofday(&t1, NULL);
 
 		if(countOc == false && screenDetection.found.size() > 0)
 			return screenDetection;
 
-		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 < 1000 * dt_interFramems)
+		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 < 1000 * dt_interFramems){
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
-		else
-			std::cout<<"NOT SLEEPING!!!!"<<std::endl;
+		}
 	}
 	return screenDetection;
 }
@@ -251,7 +245,6 @@ std::string getNameOfState(outputState o){
 			return "No video";
 		case S_BLACK_SCREEN:
 			return "Black Screen";
-
 	}
 	return "Not found";
 }

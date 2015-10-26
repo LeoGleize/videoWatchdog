@@ -45,7 +45,7 @@ public:
  * true
  */
 bool isImageBlackScreenOrZapScreen(cv::Mat &img,const cv::Vec3b &thresholdColor);
-objMatch matchTemplateMultiscale(cv::Mat &img, cv::Mat &templ);
+objMatch matchTemplateSameScale(cv::Mat &img, cv::Mat &templ);
 
 } /* namespace RestServer */
 

@@ -148,6 +148,10 @@ IplImage* CameraDecklink::captureLastFrame() {
 	return delegate->getLastImage();
 }
 
+/**
+ * Method to capture video from the driver, this method can only be accessed
+ * by one thread at any time due to concurrency constraints on the video card.
+ */
 cv::Mat CameraDecklink::captureLastCvMat() {
 	mutexCallOnce.lock();
 	/*Try to read last image, in case of exception release the mutex
