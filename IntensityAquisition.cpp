@@ -10,7 +10,7 @@
 #include "blackmagic/cameradecklink.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d.hpp>
 #include <omp.h>
 #include "ServerInstance/ServerInstance.h"
@@ -62,6 +62,14 @@ int main(int argc, char **argv) {
 			    			 cv::Scalar(250,250,250)
 			    		   );
 			}
+//			cv::Mat m, v;
+//			m = img;
+//			v = img;
+//			cv::Canny(img, m, 100,100);
+//			cv::cvtColor(m,v,CV_GRAY2BGR);
+//			m = v;
+//			cv::addWeighted(img,.1,m,.8,0.0,v);
+//			img = v;
 			if (!resize){
 				cv::imshow("R7IntensityProServer", img);
 			}else {
