@@ -46,7 +46,7 @@ void wwwcheckimage(web::http::http_request request){
 	    pplx::task<imageReconData> requestTask = client.request(myrequest).then([](http_response response)
 	    {
 	        // Print the status code.
-	    	std::cout<<"status code = "<<response.status_code()<<std::endl;
+//	    	std::cout<<"status code = "<<response.status_code()<<std::endl;
 	    	//on error
 	    	if(response.status_code()/100 != 2){
 	    		return pplx::create_task([]
@@ -94,8 +94,8 @@ void wwwcheckimage(web::http::http_request request){
 	    });
 	    requestTask.wait();
 	    imageReconData res = requestTask.get();
-	    std::cout<<"Scale of return = "<<res.match.scale<<std::endl;
-	    std::cout<<"Req finished"<<std::endl;
+//	    std::cout<<"Scale of return = "<<res.match.scale<<std::endl;
+//	    std::cout<<"Req finished"<<std::endl;
 	    if(res.isValidImage == true){
 			//return image or JSON?
 			if(params.has_field("returnImage") &&
