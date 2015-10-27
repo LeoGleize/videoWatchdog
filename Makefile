@@ -17,3 +17,6 @@ all:	$(TARGET)
 
 clean:
 	rm -f $(OBJS) $(TARGET)
+
+install: 
+	mv $(TARGET) /usr/bin/$(TARGET)
