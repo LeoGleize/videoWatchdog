@@ -1,8 +1,7 @@
 R7IntensityProServer
 --------------------
 
-
-
+	To build R7IntensityPro first run the script installDep.sh, this will install all the dependencies needed, and then you can simply run 'make' and 'sudo make install'.
 
 dependencies:
 
