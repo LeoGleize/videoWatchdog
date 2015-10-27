@@ -7,5 +7,6 @@ cd build.release
 CXX=g++-4.8 cmake .. -DCMAKE_BUILD_TYPE=Release
 make
 sudo make install
+sudo ldconfig
 echo "All dependencies have been installed"
 echo "You can now build R7IntensityPro running 'make'"
