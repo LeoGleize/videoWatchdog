@@ -7,7 +7,7 @@ x * imageRecognition.cpp
 
 #include "imageRecognition.h"
 #include <iostream>
-#include <opencv2/features2d.hpp>
+//#include <opencv2/features2d.hpp>
 
 namespace imageRecognition {
 
