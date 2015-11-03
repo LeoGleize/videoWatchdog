@@ -18,48 +18,50 @@
 
 namespace RestServer {
 
-class ServerInstance {
+	class ServerInstance {
 
-private:
-	std::vector<web::http::experimental::listener::http_listener> myListeners;
+	private:
+		std::vector<web::http::experimental::listener::http_listener> myListeners;
 
-public:
-	ServerInstance();
-	void stop();
-	void start();
-	virtual ~ServerInstance();
-	static CameraDecklink *cameraDeckLink;
-};
+	public:
+		ServerInstance();
+		void stop();
+		void start();
+		virtual ~ServerInstance();
+		static CameraDecklink *cameraDeckLink;
+	};
 
-/* Callbacks */
-enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_BLACK_SCREEN, S_NO_VIDEO, S_NOT_FOUND};
-std::string getNameOfState(outputState o);
+	/* Callbacks */
+	enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_BLACK_SCREEN, S_NO_VIDEO, S_NOT_FOUND};
+	std::string getNameOfState(outputState o);
+	outputState getStateByName(std::string name);
 
+	struct __screenState{
+		//max norm calculated for differences between two frames divided by number of pixels
+		double maxDiffppixel;
+		//max norm calculated for first frame divided by number of pixels
+		double maxNormppixel;
+		outputState oState;
+	};
 
-struct __screenState{
-	//max norm calculated for differences between two frames divided by number of pixels
-	double maxDiffppixel;
-	//max norm calculated for first frame divided by number of pixels
-	double maxNormppixel;
-	outputState oState;
-};
+	struct __detectScreenState{
+		std::vector<outputState> found;
+		std::vector<std::time_t> timestamps;
+		std::vector<unsigned long> tlast;
+	};
 
-struct __detectScreenState{
-	std::vector<outputState> found;
-	std::vector<std::time_t> timestamps; //change to timestamp??
-	std::vector<unsigned int> msFromStart;
-};
+	const double freezeThreshold = 5000.0/(1920*1080);
+	const cv::Vec3b blackThreshold(35,35,35);
 
-const double freezeThreshold = 5000.0/(1920*1080);
-const cv::Vec3b blackThreshold(35,35,35);
-
-void wwwgrabScreen(web::http::http_request request);
-void wwwdetectState(web::http::http_request request);
-void wwwdetectEvent(web::http::http_request request);
-void wwwcountEvents(web::http::http_request request);
-void wwwcheckimage(web::http::http_request request);
-__screenState getState(int dt_ms);
-__detectScreenState detectStateChange(outputState stateSearch, unsigned int timeAnalysis,unsigned int timeEvent,bool countOc);
+	void wwwgrabScreen(web::http::http_request request);
+	void wwwgrabScreenb64(web::http::http_request request);
+	void wwwdetectState(web::http::http_request request);
+	void wwwdetectEvent(web::http::http_request request);
+	void wwwcountEvents(web::http::http_request request);
+	void wwwcheckimage(web::http::http_request request);
+	void wwwgetSound(web::http::http_request request);
+	__screenState getState(int dt_ms);
+	__detectScreenState detectStateChange(std::list<outputState> &stateSearch, unsigned int timeAnalysis,unsigned int timeEvent,bool countOc);
 } /* namespace RestServer */
 
 #endif /* SERVERINSTANCE_H_ */

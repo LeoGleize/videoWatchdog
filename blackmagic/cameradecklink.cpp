@@ -324,6 +324,12 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 
 }
 
+/**
+ * getAudioData receives a pointer to a void pointer and a pointer to an integer value
+ * 				it'll then allocate memory for a buffer containing audio caught in the last
+ * 				N_AUDIO_BUFFERS_STORE frames. This buffer needs to be freed by user and has
+ * 				size bytes.
+  */
 void DeckLinkCaptureDelegate::getAudioData(void **pointerToData, int *size){
 	pthread_mutex_lock(&m_audio_mutex);
 	unsigned int dataSz = 0;
@@ -336,7 +342,7 @@ void DeckLinkCaptureDelegate::getAudioData(void **pointerToData, int *size){
 	char * ptrcpy = (char *) * pointerToData;
 	for(unsigned int i = 0; i < this->audioData.size(); i++){
 		memcpy(ptrcpy+j,this->audioData[i].first, this->audioData[i].second);
-		j += audioData.size();
+		j += audioData[i].second;
 	}
 	pthread_mutex_unlock(&m_audio_mutex);
 	return;

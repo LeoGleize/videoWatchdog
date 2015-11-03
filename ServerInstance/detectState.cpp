@@ -13,6 +13,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <queue>
+#include <algorithm>
+#include <ctime>
 
 using namespace web;
 using namespace web::http;
@@ -51,16 +53,11 @@ void wwwdetectEvent(http_request request) {
 
 	//check for parameters on received POST request
 	if ( params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
-	  && params.has_field("eventType") && params["eventType"].is_string()
+	  && params.has_field("eventType") && params["eventType"].is_array()
 	  && params.has_field("timeEvent") && params["timeEvent"].is_integer()) {
 		if (params["timeAnalysis"].as_integer() < 2000) {
 			reply["error"] = 1;
 			reply["message"] = web::json::value::string("'timeAnalysis' needs to be greater than 2000ms");
-		} else if (params["eventType"].as_string() != "FREEZE"
-				&& params["eventType"].as_string() != "LIVE"
-				&& params["eventType"].as_string() != "BLACK") {
-			reply["error"] = 1;
-			reply["message"] = web::json::value::string("Valid 'eventType' are 'BLACK', 'LIVE' and 'FREEZE'");
 		} else if (params["timeEvent"].as_integer() < 500
 				|| params["timeEvent"].as_integer()	> params["timeAnalysis"].as_integer()) {
 			reply["error"] = 1;
@@ -72,22 +69,34 @@ void wwwdetectEvent(http_request request) {
 			if(params.has_field("count") && params["count"].is_boolean()){
 				count = params["count"].as_bool();
 			}
-			outputState searchState;
-			if(params["eventType"].as_string() == "FREEZE")
-				searchState = S_FREEZE_SIGNAL;
-			else if(params["eventType"].as_string() == "LIVE")
-				searchState = S_LIVE_SIGNAL;
-			else if(params["eventType"].as_string() == "BLACK")
-				searchState = S_BLACK_SCREEN;
-			__detectScreenState state = detectStateChange(searchState,
+			std::list<outputState> eventsSearch;
+			//go through list of events being searched
+			for(int i = 0; i < params["eventType"].as_array().size(); i++){
+				outputState oState = getStateByName(params["eventType"].as_array().at(i).as_string());
+				eventsSearch.push_back(oState);
+				if(oState == S_NOT_FOUND){
+					reply["error"] = 1;
+					std::string message = "Invalid value for eventType, should be: LIVE / FREEZE / BLACK";
+					reply["message"] = web::json::value::string(message);
+					return;
+				}
+			}
+			eventsSearch.unique();
+			__detectScreenState state = detectStateChange(eventsSearch,
 														  params["timeAnalysis"].as_integer(),
 														  params["timeEvent"].as_integer(),
 														  count);
 			//process output
 			for(int i = 0; i < state.found.size(); i++){
+				char buffer[32];
 				json::value tempObj;
+
 				tempObj["foundState"] = web::json::value::string(getNameOfState(state.found[i]));
-				tempObj["timeFromStartMs"] = web::json::value::number(state.msFromStart[i]);
+				tempObj["observedFor"] = web::json::value::number(state.tlast[i]);
+				struct tm * timeinfo;
+				timeinfo = localtime(&(state.timestamps[i]));
+				std::strftime(buffer, 32, "%d.%m.%Y %H:%M:%S", timeinfo);
+				tempObj["when"] = web::json::value::string(buffer);
 				reply["foundState"][i] = tempObj;
 			}
 			reply["error"] = 0;
@@ -95,8 +104,8 @@ void wwwdetectEvent(http_request request) {
 	} else {
 		reply["error"] = 1;
 		std::string message = "This request needs three parameters: 'timeAnalysis' the time in" \
-						      " milliseconds that the video output will be evaluated, 'eventType' " \
-						      "the type of event we are looking for and 'timeEvent': how long the " \
+						      " milliseconds that the video output will be evaluated, 'eventType': " \
+						      "the type of events we are looking for in an array and 'timeEvent': how long the " \
 						      "event will need to be seen to get an occurrence";
 		reply["message"] = web::json::value::string(message);
 	}
@@ -154,18 +163,29 @@ __screenState getState(int dt_ms) {
 	return reply;
 }
 
-__detectScreenState detectStateChange(outputState stateSearch,
+__detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 									  unsigned int timeAnalysis,
 									  unsigned int timeEvent,
 									  bool countOc) {
 	__detectScreenState screenDetection;
-	int dt_interFramems = 100; //one shot per 100ms = we'll try to keep 10fps on average
+	bool searchBlack  = (std::find(stateSearch.begin(), stateSearch.end(), S_BLACK_SCREEN)  != stateSearch.end());
+	bool searchFreeze = (std::find(stateSearch.begin(), stateSearch.end(), S_FREEZE_SIGNAL) != stateSearch.end());
+	bool searchLive   = (std::find(stateSearch.begin(), stateSearch.end(), S_LIVE_SIGNAL)   != stateSearch.end());
+	outputState lastCapturedState = S_NOT_FOUND;
+
+	//number of frames used for status calculation 1 frame / 100ms
 	int nFrames = timeEvent / 100;
-	unsigned int nReadings = timeAnalysis / 100;
+	if(nFrames > 15)
+		nFrames = 15; //saturate otherwise we'll have too many comparisons
+
+	int dt_interFramems =  timeEvent / nFrames;
+
+	unsigned int nReadings = timeAnalysis / dt_interFramems;
 	std::deque<cv::Mat> matList;
 	timeval t0, t1, tStart;
-	unsigned int msFromStart;
+
 	gettimeofday(&tStart, NULL);
+	long culmulativeDelay = 0;
 	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 		try{
@@ -183,7 +203,7 @@ __detectScreenState detectStateChange(outputState stateSearch,
 			double maxDiff = 0;
 			unsigned int npixel = matList[0].cols * matList[0].rows;
 			cv::Mat subtractionResult;
-			for (int i = 1; i < matList.size(); i++) {
+			for (unsigned int i = 1; i < matList.size(); i++) {
 				double n1,n2;
 				cv::subtract(matList[0], matList[i], subtractionResult);
 				n1 = cv::norm(subtractionResult);
@@ -194,31 +214,41 @@ __detectScreenState detectStateChange(outputState stateSearch,
 			}
 			maxDiff = maxDiff / npixel;
 
-			if (stateSearch == S_LIVE_SIGNAL && maxDiff > freezeThreshold) {
-				matList.clear();
-				screenDetection.timestamps.push_back(std::time(NULL));
-				screenDetection.found.push_back(S_LIVE_SIGNAL);
-				gettimeofday(&t1, NULL);
-				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
-				screenDetection.msFromStart.push_back(msFromStart);
-			} else if (stateSearch == S_BLACK_SCREEN
-					&& maxDiff < freezeThreshold &&
-					imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
-				matList.clear();
-				screenDetection.timestamps.push_back(std::time(NULL));
-				screenDetection.found.push_back(S_BLACK_SCREEN);
-				gettimeofday(&t1, NULL);
-				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
-				screenDetection.msFromStart.push_back(msFromStart);
-			} else if (stateSearch == S_FREEZE_SIGNAL
+			if (searchLive && maxDiff > freezeThreshold) {
+
+				if(lastCapturedState == S_LIVE_SIGNAL){
+					//just increment last capture
+					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
+				}else{
+					screenDetection.timestamps.push_back(std::time(NULL));
+					screenDetection.found.push_back(S_LIVE_SIGNAL);
+					screenDetection.tlast.push_back(timeEvent);
+				}
+				lastCapturedState = S_LIVE_SIGNAL;
+			} else if (searchBlack
+					&& maxDiff < freezeThreshold
+			        && imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
+				if(lastCapturedState == S_BLACK_SCREEN){
+					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
+				}else{
+					screenDetection.timestamps.push_back(std::time(NULL));
+					screenDetection.found.push_back(S_BLACK_SCREEN);
+					screenDetection.tlast.push_back(timeEvent);
+				}
+				lastCapturedState = S_BLACK_SCREEN;
+			} else if (searchFreeze
 					&& maxDiff < freezeThreshold
 					&& !imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
-				matList.clear();
-				screenDetection.timestamps.push_back(std::time(NULL));
-				screenDetection.found.push_back(S_FREEZE_SIGNAL);
-				gettimeofday(&t1, NULL);
-				msFromStart = (t1.tv_sec - tStart.tv_sec)*1000 + (t1.tv_usec - tStart.tv_usec)/1000;
-				screenDetection.msFromStart.push_back(msFromStart);
+				if(lastCapturedState == S_FREEZE_SIGNAL){
+					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
+				}else{
+					screenDetection.timestamps.push_back(std::time(NULL));
+					screenDetection.found.push_back(S_FREEZE_SIGNAL);
+					screenDetection.tlast.push_back(timeEvent);
+				}
+				lastCapturedState = S_FREEZE_SIGNAL;
+			}else{
+				lastCapturedState = S_NOT_FOUND;
 			}
 		}
 		gettimeofday(&t1, NULL);
@@ -226,8 +256,11 @@ __detectScreenState detectStateChange(outputState stateSearch,
 		if(countOc == false && screenDetection.found.size() > 0)
 			return screenDetection;
 
-		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 < 1000 * dt_interFramems){
-			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
+		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 + culmulativeDelay < 1000 * dt_interFramems){
+			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 - culmulativeDelay));
+			culmulativeDelay = 0;
+		}else{
+			culmulativeDelay = culmulativeDelay - (1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
 		}
 	}
 	return screenDetection;
@@ -247,6 +280,18 @@ std::string getNameOfState(outputState o){
 			return "Black Screen";
 	}
 	return "Not found";
+}
+
+outputState getStateByName(std::string name){
+	if(name == "LIVE")
+		return S_LIVE_SIGNAL;
+	else if(name == "FREEZE")
+		return S_FREEZE_SIGNAL;
+	else if(name == "BLACK")
+		return S_BLACK_SCREEN;
+	else if(name == "NOSIGNAL")
+		return S_NO_VIDEO;
+	return S_NOT_FOUND;
 }
 
 };

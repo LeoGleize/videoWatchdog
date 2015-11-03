@@ -18,6 +18,7 @@
 #include <queue>
 #include <pplx/pplxtasks.h>
 #include <cpprest/json.h>
+#include <system_error>
 
 using namespace web;
 using namespace web::http;
@@ -45,9 +46,7 @@ void wwwcheckimage(web::http::http_request request){
 		//create request task (similar to JS promises)
 	    pplx::task<imageReconData> requestTask = client.request(myrequest).then([](http_response response)
 	    {
-	        // Print the status code.
-//	    	std::cout<<"status code = "<<response.status_code()<<std::endl;
-	    	//on error
+	    	//on error (2xx = valid reply)
 	    	if(response.status_code()/100 != 2){
 	    		return pplx::create_task([]
 	    		{
@@ -73,47 +72,51 @@ void wwwcheckimage(web::http::http_request request){
 	            	imrData.exception = e.what();
 	            	return imrData;
 	            }
+				cv::Mat bwScreen;
+				cv::cvtColor(screen, bwScreen, CV_BGR2GRAY);
+				std::vector<unsigned char> imvector(imData.begin(), imData.end());
+				cv::Mat pattern(cv::imdecode(imvector, 0)); //load grayscale
+				cv::Mat templateBorder, imageBorder;
+				cv::Canny(pattern,templateBorder,100,100);
+				cv::Canny(bwScreen,imageBorder,100,100);
+				imrData.match = imageRecognition::matchTemplateSameScale(imageBorder,templateBorder);
+				imrData.originalImage = screen;
+				cv::Point pt1(imrData.match.pos.x,imrData.match.pos.y);
+				cv::Point pt2(imrData.match.pos.x + imrData.match.pos.width,imrData.match.pos.y + imrData.match.pos.height);
+				cv::rectangle(screen,pt1, pt2, cv::Scalar(0,0,255),3);
+				pt1.y -= 5;
+				cv::putText(screen,"match value = "+ std::to_string(imrData.match.matchScore), pt1, cv::FONT_HERSHEY_SIMPLEX, 0.8,cv::Scalar(0,0,255));
+				return imrData;
 
-		    	cv::Mat bwScreen;
-		    	cv::cvtColor(screen, bwScreen, CV_BGR2GRAY);
-		    	std::vector<unsigned char> imvector(imData.begin(), imData.end());
-		        cv::Mat pattern(cv::imdecode(imvector, 0)); //load grayscale
-		        cv::Mat templateBorder, imageBorder;
-		        cv::Canny(pattern,templateBorder,100,100);
-		        cv::Canny(bwScreen,imageBorder,100,100);
-		        imrData.match = imageRecognition::matchTemplateSameScale(imageBorder,templateBorder);
-		        imrData.originalImage = screen;
-		        cv::Point pt1(imrData.match.pos.x,imrData.match.pos.y);
-		        cv::Point pt2(imrData.match.pos.x + imrData.match.pos.width,imrData.match.pos.y + imrData.match.pos.height);
-		        cv::rectangle(screen,pt1, pt2, cv::Scalar(0,0,255),3);
-		        pt1.y -= 5;
-		        cv::putText(screen,"match value = "+ std::to_string(imrData.match.matchScore), pt1, cv::FONT_HERSHEY_SIMPLEX, 0.8,cv::Scalar(0,0,255));
-		        return imrData;
 	        });
 
 	    });
-	    requestTask.wait();
-	    imageReconData res = requestTask.get();
-//	    std::cout<<"Scale of return = "<<res.match.scale<<std::endl;
-//	    std::cout<<"Req finished"<<std::endl;
-	    if(res.isValidImage == true){
-			//return image or JSON?
-			if(params.has_field("returnImage") &&
-			   params["returnImage"].is_boolean() &&
-			   params["returnImage"].as_bool() == true){
-				std::vector<uchar> imageData;
-				cv::imencode(".png",res.originalImage,imageData);
-				std::string data(imageData.begin(), imageData.end());
-				request.reply(status_codes::OK, data, "Content-type: image/png");
-			}else{
-				reply["error"] = 0;
-				reply["match"] = res.match.toJSON();
-				request.reply(status_codes::OK, reply);
-			}
-	    }else{
+	    try{
+	    	requestTask.wait();
+	    	imageReconData res = requestTask.get();
+		    if(res.isValidImage == true){
+				//return image or JSON?
+				if(params.has_field("returnImage") &&
+				   params["returnImage"].is_boolean() &&
+				   params["returnImage"].as_bool() == true){
+					std::vector<uchar> imageData;
+					cv::imencode(".png",res.originalImage,imageData);
+					std::string data(imageData.begin(), imageData.end());
+					request.reply(status_codes::OK, data, "Content-type: image/png");
+				}else{
+					reply["error"] = 0;
+					reply["match"] = res.match.toJSON();
+					request.reply(status_codes::OK, reply);
+				}
+		    }else{
+		    	reply["error"] = 1;
+		    	reply["message"] = web::json::value::string("imageURL returned an invalid image");
+		    	reply["exception"] = web::json::value::string(res.exception);
+		    	request.reply(status_codes::OK, reply);
+		    }
+	    }catch(const std::exception &e){
 	    	reply["error"] = 1;
-	    	reply["message"] = web::json::value::string("imageURL returned an invalid image");
-	    	reply["exception"] = web::json::value::string(res.exception);
+	    	reply["message"] = web::json::value::string(e.what());
 	    	request.reply(status_codes::OK, reply);
 	    }
 	}else{

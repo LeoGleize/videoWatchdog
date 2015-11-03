@@ -12,7 +12,7 @@
 #include <queue>
 
 #define FIX_RESOLUTION
-#define N_AUDIO_BUFFERS_STORE 10
+#define N_AUDIO_BUFFERS_STORE 100
 enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
 
 class DeckLinkCaptureDelegate: public IDeckLinkInputCallback {
