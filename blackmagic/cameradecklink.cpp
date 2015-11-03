@@ -51,7 +51,7 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 
 	static int g_videoModeIndex = 8;
 	static int g_audioChannels = 2;
-	static int g_audioSampleDepth = 16;
+	static int g_audioSampleDepth = bmdAudioSampleType16bitInteger;
 
 	pixelFormat = bmdFormat8BitYUV;
 
@@ -62,7 +62,7 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 	delegate = new DeckLinkCaptureDelegate();
 	pthread_mutex_init(delegate->sleepMutex, NULL);
 	pthread_cond_init(delegate->sleepCond, NULL);
-	deckLinkInput->SetCallback(delegate);
+
 
 	// Obtain an IDeckLinkDisplayModeIterator to enumerate the display modes supported on output
 	result = deckLinkInput->GetDisplayModeIterator(&displayModeIterator);
@@ -83,8 +83,6 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 			displayMode->GetName(&displayModeName);
 			selectedDisplayMode = displayMode->GetDisplayMode();
 
-//            cout << selectedDisplayMode << endl
-//                 << "should be " << bmdModeHD1080i50 << endl;
 #ifdef FIX_RESOLUTION
 			selectedDisplayMode = bmdModeHD1080i50;
 #endif
@@ -127,12 +125,14 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 		return;
 	}
 
-	result = deckLinkInput->EnableAudioInput(bmdAudioSampleRate48kHz,
-			g_audioSampleDepth, g_audioChannels);
+	result = deckLinkInput->EnableAudioInput(bmdAudioSampleRate48kHz, g_audioSampleDepth, g_audioChannels);
+
 	if (result != S_OK) {
+		fprintf(stderr, "Failed to enable audio input\n");
 		return;
 	}
-
+	deckLinkInput->SetCallback(delegate);
+	//start audio and video decoding sync
 	result = deckLinkInput->StartStreams();
 	if (result != S_OK) {
 		return;
@@ -169,11 +169,15 @@ cv::Mat CameraDecklink::captureLastCvMat() {
 	}
 }
 
+void CameraDecklink::getAudioData(void **pointerToData, int *size){
+	this->delegate->getAudioData(pointerToData, size);
+}
+
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate() :
 		m_refCount(0) {
 	this->frameState = DECKLINK_VIDEO_OK;
 	pthread_mutex_init(&m_mutex, NULL);
-
+	pthread_mutex_init(&m_audio_mutex, NULL);
 	lastImage = 0;
 	frameCount = 0;
 //    stopped = false;
@@ -184,10 +188,12 @@ DeckLinkCaptureDelegate::DeckLinkCaptureDelegate() :
 
 	height = 1080;
 	width = 1920;
+	audioWrite.open("rawaudio.raw", std::ofstream::binary);
 }
 
 DeckLinkCaptureDelegate::~DeckLinkCaptureDelegate() {
 	pthread_mutex_destroy(&m_mutex);
+	pthread_mutex_destroy(&m_audio_mutex);
 }
 
 ULONG DeckLinkCaptureDelegate::AddRef(void) {
@@ -214,19 +220,19 @@ ULONG DeckLinkCaptureDelegate::Release(void) {
 HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 		IDeckLinkVideoInputFrame* videoFrame,
 		IDeckLinkAudioInputPacket* audioFrame) {
+	static int g_audioChannels = 2;
 	IDeckLinkVideoFrame* rightEyeFrame = NULL;
 	IDeckLinkVideoFrame3DExtensions* threeDExtensions = NULL;
 	frameState = DECKLINK_VIDEO_OK;
-	void* audioFrameBytes;
+
 	// Handle Video Frame
 	if (videoFrame) // && !stopped)
 	{
-		// If 3D mode is enabled we retreive the 3D extensions interface which gives.
+		// If 3D mode is enabled we retrieve the 3D extensions interface which gives.
 		// us access to the right eye frame by calling GetFrameForRightEye() .
 		if ((videoFrame->QueryInterface(IID_IDeckLinkVideoFrame3DExtensions,
 				(void **) &threeDExtensions) != S_OK)
-				|| (threeDExtensions->GetFrameForRightEye(&rightEyeFrame)
-						!= S_OK)) {
+				|| (threeDExtensions->GetFrameForRightEye(&rightEyeFrame) != S_OK)) {
 			rightEyeFrame = NULL;
 		}
 
@@ -247,8 +253,7 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 					timecode->GetString(&timecodeString);
 				}
 			}
-//			printf("#%lu frame received: [%s] - Pointer = 0x%x - size = %d px\n",frameCount,
-//					timecodeString != NULL ? timecodeString : "No timecode", videoFrame, videoFrame->GetHeight() * videoFrame->GetWidth());
+
 			if (timecodeString)
 				free((void*) timecodeString);
 
@@ -261,13 +266,25 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 
 		frameCount++;
 
-		pthread_cond_signal(sleepCond); // kill after one frame
-		//stopped = true;
-		//        if (g_maxFrames > 0 && frameCount >= g_maxFrames)
-		//        {
-		//            stopped = true;
-		//            pthread_cond_signal(&sleepCond);
-		//        }
+		//read audio frame to buffer
+		if(audioFrame){
+			void* audioBuffer = NULL;
+			audioFrame->GetBytes(&audioBuffer); //get pointer to data
+			const int audioNBytes = audioFrame->GetSampleFrameCount() * sizeof(int16_t) * g_audioChannels;
+			void *pcopy = malloc(audioNBytes);
+			memcpy(pcopy, audioBuffer, audioNBytes);
+			if(pthread_mutex_trylock(&m_audio_mutex) == 0){
+				this->audioData.push_back(std::pair<void*,int>(pcopy, audioNBytes));
+				if(audioData.size() > N_AUDIO_BUFFERS_STORE){
+					free(this->audioData[0].first);
+					this->audioData.pop_front();
+				}
+				pthread_mutex_unlock(&m_audio_mutex);
+			}else{
+				free(pcopy);
+			}
+		}
+		pthread_cond_signal(sleepCond);
 	}
 	return S_OK;
 }
@@ -282,7 +299,6 @@ IplImage* DeckLinkCaptureDelegate::getLastImage() {
 	}
 }
 
-//TOFIX: clamping of values once they are out of range! (will it solve color distortions?)
 void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		IplImage * m_RGB) {
 	if (!m_RGB)
@@ -306,6 +322,24 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                    // b
 	}
 
+}
+
+void DeckLinkCaptureDelegate::getAudioData(void **pointerToData, int *size){
+	pthread_mutex_lock(&m_audio_mutex);
+	unsigned int dataSz = 0;
+
+	for(unsigned int i = 0; i < this->audioData.size(); i++)
+		dataSz += audioData[i].second;
+	*pointerToData = malloc(dataSz);
+	*size = dataSz;
+	unsigned int j = 0;
+	char * ptrcpy = (char *) * pointerToData;
+	for(unsigned int i = 0; i < this->audioData.size(); i++){
+		memcpy(ptrcpy+j,this->audioData[i].first, this->audioData[i].second);
+		j += audioData.size();
+	}
+	pthread_mutex_unlock(&m_audio_mutex);
+	return;
 }
 
 HRESULT DeckLinkCaptureDelegate::VideoInputFormatChanged(
