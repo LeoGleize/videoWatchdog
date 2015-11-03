@@ -8,8 +8,11 @@
 #include "cardexceptions.h"
 #include <exception>
 #include <thread>
-#define FIX_RESOLUTION
+#include <fstream>
+#include <queue>
 
+#define FIX_RESOLUTION
+#define N_AUDIO_BUFFERS_STORE 10
 enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
 
 class DeckLinkCaptureDelegate: public IDeckLinkInputCallback {
@@ -20,6 +23,7 @@ public:
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID *ppv) {
 		return E_NOINTERFACE;
 	}
+
 	virtual ULONG STDMETHODCALLTYPE AddRef(void);
 	virtual ULONG STDMETHODCALLTYPE Release(void);
 	virtual HRESULT STDMETHODCALLTYPE VideoInputFormatChanged(
@@ -40,12 +44,15 @@ public:
 	long frameCount;
 	BMDTimecodeFormat g_timecodeFormat;
 
+	void getAudioData(void **pointerToData, int *size);
 private:
+	std::deque<std::pair<void *, unsigned short> > audioData;
 	ULONG m_refCount;
 	FRAME_STATE frameState;
 	pthread_mutex_t m_mutex;
+	pthread_mutex_t m_audio_mutex;
 	IplImage* lastImage;
-
+	std::ofstream audioWrite;
 	int height, width;
 
 };
@@ -58,11 +65,13 @@ public:
 
 	IplImage * captureLastFrame();
 	cv::Mat captureLastCvMat();
+	void getAudioData(void **pointerToData, int *size);
 private:
 	IDeckLink *deckLink;
 	IDeckLinkIterator *deckLinkIterator;
 	DeckLinkCaptureDelegate *delegate;
 	std::mutex mutexCallOnce;
+	short audioBufferCounter;
 	std::mutex threadMutexAcquire;
 	IDeckLinkInput *deckLinkInput;
 	IDeckLinkDisplayModeIterator *displayModeIterator;
