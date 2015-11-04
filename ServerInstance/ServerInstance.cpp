@@ -43,14 +43,14 @@ namespace RestServer {
 		myListeners.push_back(http_listener(myRoute5));
 		myListeners[5].support(methods::GET, wwwgetSound);
 
-//		/*Watch dog methods*/
-//		web::uri myRoute6("http://0.0.0.0:8080/watchdog");
-//		myListeners.push_back(http_listener(myRoute6));
-//		myListeners[6].support(methods::POST, wwwWatchdog);
-//
-//		web::uri myRoute7("http://0.0.0.0:8080/report");
-//		myListeners.push_back(http_listener(myRoute7));
-//		myListeners[7].support(methods::GET, wwwReports);
+		/*Watch dog methods*/
+		web::uri myRoute6("http://0.0.0.0:8080/watchdog");
+		myListeners.push_back(http_listener(myRoute6));
+		myListeners[6].support(methods::POST, wwwWatchdog);
+
+		web::uri myRoute7("http://0.0.0.0:8080/report");
+		myListeners.push_back(http_listener(myRoute7));
+		myListeners[7].support(methods::GET, wwwReports);
 
 	}
 
