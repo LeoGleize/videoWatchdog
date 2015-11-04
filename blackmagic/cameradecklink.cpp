@@ -14,7 +14,6 @@ CameraDecklink::CameraDecklink() {
 
 	deckLinkIterator = CreateDeckLinkIteratorInstance();
 
-	int exitStatus = 1;
 	HRESULT result;
 
 	if (!deckLinkIterator) {

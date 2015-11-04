@@ -78,6 +78,7 @@ void wwwdetectEvent(http_request request) {
 					reply["error"] = 1;
 					std::string message = "Invalid value for eventType, should be: LIVE / FREEZE / BLACK";
 					reply["message"] = web::json::value::string(message);
+					request.reply(status_codes::OK, reply);
 					return;
 				}
 			}

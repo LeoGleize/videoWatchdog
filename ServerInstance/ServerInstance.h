@@ -60,6 +60,9 @@ namespace RestServer {
 	void wwwcountEvents(web::http::http_request request);
 	void wwwcheckimage(web::http::http_request request);
 	void wwwgetSound(web::http::http_request request);
+	void wwwWatchdog(web::http::http_request request);
+	void wwwReports(web::http::http_request request);
+
 	__screenState getState(int dt_ms);
 	__detectScreenState detectStateChange(std::list<outputState> &stateSearch, unsigned int timeAnalysis,unsigned int timeEvent,bool countOc);
 } /* namespace RestServer */
