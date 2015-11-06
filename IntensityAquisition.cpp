@@ -13,7 +13,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <omp.h>
 #include "ServerInstance/ServerInstance.h"
-
+#include "websocket/SSEServer.h"
 using namespace std;
 
 int main(int argc, char **argv) {
@@ -43,14 +43,18 @@ int main(int argc, char **argv) {
 
 	camera1 = new CameraDecklink();
 	RestServer::ServerInstance::cameraDeckLink = camera1;
+
 	myServer.start();
 
 	while (true) {
 		if (showScreen) {
 			cv::Mat img;
+			bool deleteAfter = false;
+			IplImage *dataToFree;
 			try{
-				img = camera1->captureLastCvMat();
 
+				img = camera1->captureLastCvMat(&dataToFree);
+				deleteAfter = true;
 			}catch(const CardException &e){
 				img = cv::Mat(1080,1920, CV_8UC3, cv::Scalar(0,0,0));
 				cv::putText( img,
@@ -68,9 +72,12 @@ int main(int argc, char **argv) {
 				cv::resize(img, resizedimg, resizedimg.size(), 0, 0, cv::INTER_CUBIC);
 				cv::imshow("R7IntensityProServer", resizedimg);
 			}
+			if(deleteAfter)
+				cvRelease((void**) &dataToFree);
+
 		}
 
-		if (cvWaitKey(10) >= 0)
+		if (cvWaitKey(15) >= 0)
 			continue;
 	}
 	myServer.stop();

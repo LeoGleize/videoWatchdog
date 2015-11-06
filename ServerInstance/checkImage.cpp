@@ -66,7 +66,7 @@ void wwwcheckimage(web::http::http_request request){
 	            //try to get image from screen
 	            cv::Mat screen;
 	            try{
-	            	screen = ServerInstance::cameraDeckLink->captureLastCvMat();
+	            	screen = ServerInstance::cameraDeckLink->captureLastCvMatClone();
 	            }catch(CardException &e){
 	            	imrData.isValidImage = false;
 	            	imrData.exception = e.what();

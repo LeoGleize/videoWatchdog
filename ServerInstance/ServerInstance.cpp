@@ -17,8 +17,15 @@ using namespace web::http::experimental::listener;
 
 namespace RestServer {
 
+	/**
+	 * Map all the routes for our server, each route is associated with a function
+	 * with the following signature:
+	 *
+	 * 			void function(http_request request){}
+	 *
+	 */
 	ServerInstance::ServerInstance() {
-		std::cout<<"Starting server on http://localhost:8080"<<std::endl;
+		std::cout<<"Starting REST server at http://localhost:8080"<<std::endl;
 		web::uri myRoute("http://0.0.0.0:8080/image");
 		myListeners.push_back(http_listener(myRoute));
 		myListeners[0].support(methods::GET, wwwgrabScreen);
@@ -78,7 +85,7 @@ namespace RestServer {
 	void wwwgrabScreen(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
 			try{
-				cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
+				cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMatClone();
 				std::vector<uchar> imageData;
 				cv::imencode(".png",img,imageData);
 				std::string data(imageData.begin(), imageData.end());
@@ -101,7 +108,7 @@ namespace RestServer {
 	void wwwgrabScreenb64(http_request request) {
 		if(ServerInstance::cameraDeckLink != NULL){
 			try{
-				cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMat();
+				cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMatClone();
 				std::vector<uchar> imageData;
 				cv::imencode(".jpg",img,imageData);
 				std::string data(imageData.begin(), imageData.end());

@@ -9,6 +9,7 @@
 #include <sys/time.h>
 
 using namespace std;
+#define FIX_RESOLUTION 1
 
 CameraDecklink::CameraDecklink() {
 
@@ -95,14 +96,14 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 				return;
 			}
 
-			if (inputFlags & bmdVideoInputDualStream3D) {
-				if (!(displayMode->GetFlags() & bmdDisplayModeSupports3D)) {
-					fprintf(stderr,
-							"The display mode %s is not supported with 3D\n",
-							displayModeName);
-					return;
-				}
-			}
+//			if (inputFlags & bmdVideoInputDualStream3D) {
+//				if (!(displayMode->GetFlags() & bmdDisplayModeSupports3D)) {
+//					fprintf(stderr,
+//							"The display mode %s is not supported with 3D\n",
+//							displayModeName);
+//					return;
+//				}
+//			}
 
 			break;
 		}
@@ -151,7 +152,7 @@ IplImage* CameraDecklink::captureLastFrame() {
  * Method to capture video from the driver, this method can only be accessed
  * by one thread at any time due to concurrency constraints on the video card.
  */
-cv::Mat CameraDecklink::captureLastCvMat() {
+cv::Mat CameraDecklink::captureLastCvMatClone() {
 	mutexCallOnce.lock();
 	/*Try to read last image, in case of exception release the mutex
 	 * and throw exception to the next level
@@ -167,6 +168,30 @@ cv::Mat CameraDecklink::captureLastCvMat() {
 		throw ex;
 	}
 }
+
+/**
+ * Method to capture video from the driver, this method can only be accessed
+ * by one thread at any time due to concurrency constraints on the video card.
+ * The image returned has to be freed by user and should not be held (is mutable)
+ */
+cv::Mat CameraDecklink::captureLastCvMat(IplImage **p) {
+	mutexCallOnce.lock();
+	/*Try to read last image, in case of exception release the mutex
+	 * and throw exception to the next level
+	 */
+	try{
+		IplImage* img = captureLastFrame();
+		cv::Mat mat = cv::cvarrToMat(img); //free???
+//		cvRelease((void**) &img);
+		mutexCallOnce.unlock();
+		*p = img;
+		return mat;
+	}catch(const CardException &ex){
+		mutexCallOnce.unlock();
+		throw ex;
+	}
+}
+
 
 void CameraDecklink::getAudioData(void **pointerToData, int *size){
 	this->delegate->getAudioData(pointerToData, size);
