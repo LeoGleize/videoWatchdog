@@ -11,7 +11,6 @@
 #include <fstream>
 #include <queue>
 
-#define FIX_RESOLUTION
 #define N_AUDIO_BUFFERS_STORE 100
 enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
 
@@ -64,7 +63,8 @@ public:
 	void initializeCamera(IDeckLink * _deckLink);
 
 	IplImage * captureLastFrame();
-	cv::Mat captureLastCvMat();
+	cv::Mat captureLastCvMatClone();
+	cv::Mat captureLastCvMat(IplImage **p);
 	void getAudioData(void **pointerToData, int *size);
 private:
 	IDeckLink *deckLink;

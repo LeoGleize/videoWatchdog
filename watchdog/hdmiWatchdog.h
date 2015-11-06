@@ -12,23 +12,36 @@
 #include <mutex>
 #include <vector>
 #include <thread>
+#include <random>
 #include "../ServerInstance/ServerInstance.h"
+#include <cpprest/json.h>
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <cpprest/json.h>
 
+#define __MY_CODEC CV_FOURCC('M','J','P','G')
 using namespace RestServer;
 
 namespace watchdog {
 
+const std::string chars("abcdefghijklmnopqrstuvwxyz1234567890");
 
 /**
  * Event to report
  */
 struct eventToReport{
+	unsigned int eventID;
 	outputState eventType;
 	std::time_t time_when;
 	bool finished;
-	std::vector<cv::Mat> images;
 	unsigned long howLong;
+	std::string videoName;
 };
+
+/**
+ * Get a JSON representation of an eventToReport object
+ */
+web::json::value incidentToJSON(eventToReport &evt);
 
 /**
  * Singleton instance of our watchdog
@@ -36,15 +49,20 @@ struct eventToReport{
 class hdmiWatchdog {
 
 private:
+	cv::VideoWriter videoWriter;
 	bool isRunning;
+	unsigned int eventCounter;
 	std::vector<eventToReport> eventList;
 	std::thread * threadWatcher;
 	std::mutex mutexLaunch;
 	std::mutex mutexAccessSharedMessages;
+	web::json::value config;
 	std::list<outputState> eventsSearch;
 	long tEventMS;
 	void launchWatchdog();
 	hdmiWatchdog(); //constructor is PRIVATE
+	std::string getRandomName(int size);
+	std::string createVideoAndDumpFrames(std::deque<cv::Mat> toDump, unsigned int eventID);
 public:
     static hdmiWatchdog& getInstance();
     std::vector<eventToReport> getIncidents();

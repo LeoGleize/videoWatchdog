@@ -1,0 +1,6 @@
+{
+	"watchdog" : {
+            "saveVideosTo" : "/var/www/html/",
+            "prefixToLog"  : "http://10.0.1.12/"		     
+    }
+}

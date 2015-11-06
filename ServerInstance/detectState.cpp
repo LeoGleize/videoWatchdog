@@ -131,7 +131,7 @@ __screenState getState(int dt_ms) {
 	timeval t0, t1;
 
 	try{
-		fimg = ServerInstance::cameraDeckLink->captureLastCvMat();
+		fimg = ServerInstance::cameraDeckLink->captureLastCvMatClone();
 	}catch(const CardException &d){
 		if(d.getExceptionType() == NO_INPUT_EXCEPTION)
 			reply.oState = S_NO_VIDEO;
@@ -141,7 +141,7 @@ __screenState getState(int dt_ms) {
 	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 
-		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMat();
+		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMatClone();
 		cv::subtract(imgcmp, fimg, subResult);
 		diff = cv::norm(subResult);
 		maxDiff = (diff > maxDiff) ? diff : maxDiff;
@@ -190,7 +190,7 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 		try{
-			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat());
+			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMatClone());
 		}catch(const CardException &e){
 			usleep(	1000 * dt_interFramems);
 			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl<<std::flush;

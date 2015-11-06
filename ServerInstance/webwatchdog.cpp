@@ -18,6 +18,7 @@
 #include <cpprest/containerstream.h>
 #include <ctime>
 #include "base64/base64.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace web;
 using namespace web::http;
@@ -33,9 +34,20 @@ namespace RestServer{
 		  && params["start"].as_bool() == true){
 			watchdog::hdmiWatchdog &watcher = watchdog::hdmiWatchdog::getInstance();
 			//get events we are looking for
-			if(params.has_field("tevent") &&
-			   params["tevent"].is_integer() &&
-			   params["tevent"].as_integer() > 0){
+			bool isStringANumber = false;
+			int tEvent;
+			if(params.has_field("tevent") && params["tevent"].is_string()){
+				try{
+					tEvent = boost::lexical_cast<int>(params["tevent"].as_string());
+					isStringANumber = true;
+				}catch(const std::exception &e){
+
+				}
+			}
+
+			if(  params.has_field("tevent") &&
+			   ((params["tevent"].is_integer() &&
+			     params["tevent"].as_integer() > 0) || isStringANumber) ){
 
 				if(!params.has_field("eventType") || !params["eventType"].is_array()){
 					reply["error"] = 1;
@@ -57,8 +69,8 @@ namespace RestServer{
 						return;
 					}
 				}
-
-				if(watcher.start(eventsSearch, params["tevent"].as_integer())){
+				tEvent = (isStringANumber)?tEvent:params["tevent"].as_integer();
+				if(watcher.start(eventsSearch, tEvent)){
 					reply["error"] = 0;
 					reply["message"] = web::json::value::string("Watchdog started");
 				}else{
@@ -74,9 +86,22 @@ namespace RestServer{
 			    && params["stop"].is_boolean()
 			    && params["stop"].as_bool() == true){
 			watchdog::hdmiWatchdog &watcher = watchdog::hdmiWatchdog::getInstance();
+			std::vector<watchdog::eventToReport> eventsToReport;
+			if(watcher.isWatcherRunning())
+				eventsToReport = watcher.getIncidents();
 			if(watcher.stop()){
 				reply["error"] = 0;
 				reply["message"] = web::json::value::string("Watchdog stopped");
+
+				json::value incidents;
+
+				for(unsigned int i = 0; i < eventsToReport.size(); i++){
+					json::value objTest;
+					objTest = watchdog::incidentToJSON(eventsToReport[i]);
+					incidents[i] = objTest;
+				}
+				reply["incidents"] = incidents;
+
 			}else{
 				reply["error"] = 1;
 				reply["message"] = web::json::value::string("Could not stop watchdog: not running");
@@ -92,6 +117,7 @@ namespace RestServer{
 
 	void wwwReports(web::http::http_request request){
 		json::value myReply;
+
 		watchdog::hdmiWatchdog &watcher = watchdog::hdmiWatchdog::getInstance();
 
 		if(watcher.isWatcherRunning()){
@@ -103,29 +129,9 @@ namespace RestServer{
 		json::value incidents;
 		if(watcher.isWatcherRunning()){
 			std::vector<watchdog::eventToReport> events = watcher.getIncidents();
-			for(int i = 0; i < events.size(); i++){
+			for(unsigned int i = 0; i < events.size(); i++){
 				json::value objTest;
-				objTest["event"] = web::json::value::string(getNameOfState(events[i].eventType));
-				if(events[i].finished){
-					objTest["isIncidentFinished"] = web::json::value::boolean(true);
-				}else{
-					objTest["isIncidentFinished"] = web::json::value::boolean(false);
-				}
-				char buffer[32];
-				struct tm * timeinfo;
-				timeinfo = localtime(&(events[i].time_when));
-				std::strftime(buffer, 32, "%d.%m.%Y %H:%M:%S", timeinfo);
-				objTest["when"] = web::json::value::string(buffer);
-				objTest["duration_ms"] = web::json::value::number(events[i].howLong);
-				json::value images;
-				for(int j = 0; j < events[i].images.size(); j++){
-					std::vector<uchar> imageData;
-					cv::imencode(".jpg",events[i].images[j],imageData);
-					std::string imgB64(imageData.begin(), imageData.end());
-					imgB64 = base64_encode((unsigned char*)imgB64.c_str(), imgB64.size());
-					images[j] = web::json::value(imgB64);
-				}
-				objTest["images"] = images;
+				objTest = watchdog::incidentToJSON(events[i]);
 				incidents[i] = objTest;
 			}
 			if(events.size() > 0)
