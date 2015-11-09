@@ -32,7 +32,7 @@ namespace RestServer {
 	};
 
 	/* Callbacks */
-	enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_BLACK_SCREEN, S_NO_VIDEO, S_NOT_FOUND};
+	enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_FREEZE_SIGNAL_NO_AUDIO, S_BLACK_SCREEN, S_NO_VIDEO, S_NOT_FOUND};
 	std::string getNameOfState(outputState o);
 	outputState getStateByName(std::string name);
 
@@ -50,7 +50,8 @@ namespace RestServer {
 		std::vector<unsigned long> tlast;
 	};
 
-	const double freezeThreshold = 5000.0/(1920*1080);
+	const double freezeThreshold = 4500.0/(1920*1080);
+	const short soundThreshold = 25;
 	const cv::Vec3b blackThreshold(35,35,35);
 
 	void wwwgrabScreen(web::http::http_request request);

@@ -34,8 +34,17 @@ struct eventToReport{
 	outputState eventType;
 	std::time_t time_when;
 	bool finished;
-	unsigned long howLong;
+	double howLong;
 	std::string videoName;
+};
+
+/**
+ * Container used to store frame information for the watchdog
+ */
+struct watchDogData{
+	cv::Mat mat;
+	IplImage* pointerToFree;
+	bool hasAudio;
 };
 
 /**
@@ -60,9 +69,11 @@ private:
 	std::list<outputState> eventsSearch;
 	long tEventMS;
 	void launchWatchdog();
+	bool checkForAudio(short *audioData, unsigned int nElements);
+
 	hdmiWatchdog(); //constructor is PRIVATE
 	std::string getRandomName(int size);
-	std::string createVideoAndDumpFrames(std::deque<cv::Mat> toDump, unsigned int eventID);
+	std::string createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID);
 public:
     static hdmiWatchdog& getInstance();
     std::vector<eventToReport> getIncidents();

@@ -148,6 +148,15 @@ IplImage* CameraDecklink::captureLastFrame() {
 	return delegate->getLastImage();
 }
 
+IplImage* CameraDecklink::captureLastFrameAndAudio(void **ptrToAudio, int *nBytes) {
+	//pthread_mutex_lock(delegate->sleepMutex);
+	pthread_cond_wait(delegate->sleepCond, delegate->sleepMutex);
+	//pthread_mutex_unlock(delegate->sleepMutex);
+//    fprintf(stderr, "Stopping Capture\n");
+	*ptrToAudio = delegate->getLastAudioBuffer(nBytes);
+	return delegate->getLastImage();
+}
+
 /**
  * Method to capture video from the driver, this method can only be accessed
  * by one thread at any time due to concurrency constraints on the video card.
@@ -192,6 +201,22 @@ cv::Mat CameraDecklink::captureLastCvMat(IplImage **p) {
 	}
 }
 
+cv::Mat CameraDecklink::captureLastCvMatAndAudio(IplImage **p, void **ptrToAudio, int *nBytesToAudio) {
+	mutexCallOnce.lock();
+	/*Try to read last image, in case of exception release the mutex
+	 * and throw exception to the next level
+	 */
+	try{
+		IplImage* img = captureLastFrameAndAudio(ptrToAudio, nBytesToAudio);
+		cv::Mat mat = cv::cvarrToMat(img); //free???
+		mutexCallOnce.unlock();
+		*p = img;
+		return mat;
+	}catch(const CardException &ex){
+		mutexCallOnce.unlock();
+		throw ex;
+	}
+}
 
 void CameraDecklink::getAudioData(void **pointerToData, int *size){
 	this->delegate->getAudioData(pointerToData, size);
@@ -313,6 +338,17 @@ HRESULT DeckLinkCaptureDelegate::VideoInputFrameArrived(
 	return S_OK;
 }
 
+void * DeckLinkCaptureDelegate::getLastAudioBuffer(int *nBytesWritten){
+	if(this->audioData.size() > 0){
+		int nBytes = audioData.back().second;
+		void *data = malloc(nBytes);
+		memcpy(data, audioData.back().first, nBytes);
+		*nBytesWritten = nBytes;
+		return data;
+	}
+	return NULL;
+}
+
 IplImage* DeckLinkCaptureDelegate::getLastImage() {
 	if(frameState == DECKLINK_NO_VIDEO_INPUT){
 		throw CardException("No video input", NO_INPUT_EXCEPTION);
@@ -353,6 +389,8 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
  * 				it'll then allocate memory for a buffer containing audio caught in the last
  * 				N_AUDIO_BUFFERS_STORE frames. This buffer needs to be freed by user and has
  * 				size bytes.
+ * 				Audio is stored in raw format with two channels interleaved and each sample has
+ * 				the size of 2 bytes.
   */
 void DeckLinkCaptureDelegate::getAudioData(void **pointerToData, int *size){
 	pthread_mutex_lock(&m_audio_mutex);

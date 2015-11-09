@@ -51,7 +51,7 @@ namespace RestServer{
 
 				if(!params.has_field("eventType") || !params["eventType"].is_array()){
 					reply["error"] = 1;
-					std::string message = "Invalid value for eventType, should be array of: LIVE / FREEZE / BLACK";
+					std::string message = "Invalid value for eventType, should be array of: LIVE / FREEZE / BLACK / FREEZE_NO_AUDIO";
 					reply["message"] = web::json::value::string(message);
 					request.reply(status_codes::OK, reply);
 					return;
@@ -63,7 +63,7 @@ namespace RestServer{
 					eventsSearch.push_back(oState);
 					if(oState == S_NOT_FOUND){
 						reply["error"] = 1;
-						std::string message = "Invalid value for eventType, should be: LIVE / FREEZE / BLACK";
+						std::string message = "Invalid value for eventType, should be: LIVE / FREEZE / BLACK / FREEZE_NO_AUDIO";
 						reply["message"] = web::json::value::string(message);
 						request.reply(status_codes::OK, reply);
 						return;

@@ -3,6 +3,7 @@
  *
  *  Created on: Nov 3, 2015
  *      Author: fcaldas
+ *		        fcaldas@canal-plus.fr
  */
 
 #include "hdmiWatchdog.h"
@@ -17,8 +18,6 @@
 #include <fstream>
 
 namespace watchdog {
-
-
 
 hdmiWatchdog& hdmiWatchdog::getInstance(){
     static hdmiWatchdog    instance;
@@ -123,12 +122,12 @@ bool hdmiWatchdog::stop(){
 	return false;
 }
 
-std::string hdmiWatchdog::createVideoAndDumpFrames(std::deque<cv::Mat> toDump, unsigned int eventID){
+std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID){
 	web::json::value watchConfig = config["watchdog"];
 	std::string dirToSave = watchConfig["saveVideosTo"].as_string();
 
 	std::string fname = "logVideo_" + getRandomName(5) + "_" + std::to_string(eventID) + ".avi";
-	cv::Size s(toDump.front().cols, toDump.front().rows);
+	cv::Size s(toDump.front().mat.cols, toDump.front().mat.rows);
 
 	videoWriter.open(dirToSave + fname, __MY_CODEC, 5, s);
 
@@ -136,32 +135,40 @@ std::string hdmiWatchdog::createVideoAndDumpFrames(std::deque<cv::Mat> toDump, u
 		std::cout<<"Error opening video file: "<<fname<<std::endl;
 		return "Could not open " + dirToSave + fname;
 	}
-	for (std::deque<cv::Mat>::iterator it = toDump.begin(); it!=toDump.end(); ++it)
-	    videoWriter.write(*it);
+	for (std::deque<watchDogData>::iterator it = toDump.begin(); it!=toDump.end(); ++it)
+	    videoWriter.write(it->mat);
 	return watchConfig["prefixToLog"].as_string() + fname;
 
+}
+
+bool hdmiWatchdog::checkForAudio(short *audioData, unsigned int nElements){
+	short max = 0;
+	for(unsigned int i = 0; i < nElements; i++)
+		if(audioData[i] > max)
+			max = audioData[i];
+	if(max > freezeThreshold)
+		return true;
+	return false;
 }
 
 
 void hdmiWatchdog::launchWatchdog(){
 	std::cout<<"[+] Starting watchdog"<<std::endl;
 
-	std::deque<cv::Mat> matList;
-	std::deque<IplImage *> pointersToFree;
+	std::deque<watchDogData> imageList;
 
 	bool searchBlack  = (std::find(eventsSearch.begin(), eventsSearch.end(), S_BLACK_SCREEN)  != eventsSearch.end());
 	bool searchFreeze = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL) != eventsSearch.end());
 	bool searchLive   = (std::find(eventsSearch.begin(), eventsSearch.end(), S_LIVE_SIGNAL)   != eventsSearch.end());
+	bool searchFreezeNoAudio = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL_NO_AUDIO) != eventsSearch.end());
 
 	outputState lastCapturedState = S_NOT_FOUND;
 	outputState newCapturedState = S_NOT_FOUND;
 
-	//TODO: find more efficient way to to this
 	unsigned int dt_interFramems =  200;
 	unsigned int nFrames = tEventMS / dt_interFramems;
-//		if(nFrames > 15)
-//			nFrames = 15; //saturate otherwise we'll have too many comparisons
-
+	boost::random::random_device randomGen;
+	boost::random::uniform_int_distribution<> randomIntDist( 1 , nFrames-1);
 
 	timeval t0, t1;
 	long culmulativeDelay = 0;
@@ -169,51 +176,68 @@ void hdmiWatchdog::launchWatchdog(){
 	while(isRunning){
 		gettimeofday(&t0, NULL);
 		try{
+			watchDogData data;
 			IplImage *pToFree;
-//			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMatClone());
-			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMat(&pToFree));
-			pointersToFree.push_back(pToFree);
+			void *ptrAudioData;
+			int nBytes;
+			data.mat = ServerInstance::cameraDeckLink->captureLastCvMatAndAudio(&pToFree, &ptrAudioData, &nBytes);
+			data.pointerToFree = pToFree;
+			int nElements = nBytes / sizeof(short);
+			data.hasAudio = this->checkForAudio((short *) ptrAudioData, nElements);
+			free(ptrAudioData);
+			imageList.push_back(data);
 		}catch(const CardException &e){
 			usleep(	1000 * dt_interFramems);
 			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl<<std::flush;
 			continue;
 		}
-		if (matList.size() > nFrames) {
-			IplImage *p = pointersToFree.front();
+		if (imageList.size() > nFrames) {
+			IplImage *p = imageList.front().pointerToFree;
 			cvRelease((void **) &p);
-			matList.pop_front();
-			pointersToFree.pop_front();
+			imageList.pop_front();
 		}
 		//deque is full therefore we can process
-		if (matList.size() == nFrames) {
+		if (imageList.size() == nFrames) {
 			double maxDiff = 0;
-			unsigned int npixel = matList[0].cols * matList[0].rows;
+			unsigned int npixel = imageList[0].mat.cols * imageList[0].mat.rows;
 			cv::Mat subtractionResult;
-			//assume that max diff is between first and last?
 
-			for (unsigned int i = 1; i < matList.size(); i++) {
+			//measure max diff: between first and last frame and random samples in between
+			int otherIndex;
+			for (unsigned int i = 1; i < 10; i++) {
+
+				if(i == 9)
+					otherIndex = imageList.size() - 1;
+				else
+					otherIndex = randomIntDist(randomGen);
+
 				double n1,n2;
-				cv::subtract(matList[0], matList[i], subtractionResult);
+				cv::subtract(imageList[0].mat, imageList[otherIndex].mat, subtractionResult);
 				n1 = cv::norm(subtractionResult);
-				cv::subtract(matList[i], matList[0], subtractionResult);
+				cv::subtract(imageList[otherIndex].mat, imageList[0].mat, subtractionResult);
 				n2 = cv::norm(subtractionResult);
 				maxDiff = (n1 > maxDiff) ? n1 : maxDiff;
 				maxDiff = (n2 > maxDiff) ? n2 : maxDiff;
 			}
+			//check if any of the frames has audio in them
+			bool hasAudio = false;
+			for(unsigned int i = 0; i < imageList.size(); i++)
+				hasAudio = (imageList[i].hasAudio == true || hasAudio) ? true: false;
+
 			maxDiff = maxDiff / npixel;
 			if (searchLive && maxDiff > freezeThreshold) {
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_LIVE_SIGNAL){
 					//just increment last capture
 					eventList[eventList.size() - 1].howLong += dt_interFramems;
-					videoWriter.write(matList.back());
+					videoWriter.write(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
 					newEvent.eventType = S_LIVE_SIGNAL;
-					newEvent.videoName = createVideoAndDumpFrames(matList,eventCounter);
+					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
@@ -221,37 +245,41 @@ void hdmiWatchdog::launchWatchdog(){
 				newCapturedState = S_LIVE_SIGNAL;
 			} else if (searchBlack
 					&& maxDiff < freezeThreshold
-			        && imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
+			        && imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold)) {
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_BLACK_SCREEN){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
-					videoWriter.write(matList.back());
+					videoWriter.write(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
 					newEvent.eventType = S_BLACK_SCREEN;
-					newEvent.videoName = createVideoAndDumpFrames(matList,eventCounter);
+					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
 				this->mutexAccessSharedMessages.unlock();
 				newCapturedState = S_BLACK_SCREEN;
-			} else if (searchFreeze
+			} else if ((searchFreeze
 					&& maxDiff < freezeThreshold
-					&& !imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
+					&& !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
+					|| (searchFreezeNoAudio
+					&& hasAudio == false
+					&& maxDiff < freezeThreshold
+					&& !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold) )) {
 				this->mutexAccessSharedMessages.lock();
-				if(lastCapturedState == S_FREEZE_SIGNAL){
+				if(lastCapturedState == S_FREEZE_SIGNAL || lastCapturedState == S_FREEZE_SIGNAL_NO_AUDIO){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
-					videoWriter.write(matList.back());
+					videoWriter.write(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
-					newEvent.eventType = S_FREEZE_SIGNAL;
-					newEvent.videoName = createVideoAndDumpFrames(matList,eventCounter);
+					newEvent.eventType = (hasAudio)?S_FREEZE_SIGNAL:S_FREEZE_SIGNAL_NO_AUDIO;
+					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
@@ -273,7 +301,7 @@ void hdmiWatchdog::launchWatchdog(){
 		}
 		gettimeofday(&t1, NULL);
 
-//		std::cout<<"Tloop = "<<((t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000))<<std::endl;
+		std::cout<<"Tloop = "<<((t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000))<<std::endl;
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 + culmulativeDelay < 1000 * dt_interFramems){
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 - culmulativeDelay));
 			culmulativeDelay = 0;
@@ -283,11 +311,11 @@ void hdmiWatchdog::launchWatchdog(){
 	}
 
 	//free any memory that is still allocated
-	matList.clear();
-	for(std::deque<IplImage *>::iterator i = pointersToFree.begin(); i != pointersToFree.end(); i++){
-		IplImage *v = *i;
+	for(std::deque<watchDogData>::iterator i = imageList.begin(); i != imageList.end(); i++){
+		IplImage *v = i->pointerToFree;
 		cvRelease((void **) &v);
 	}
+	imageList.clear();
 	if(videoWriter.isOpened())
 		videoWriter.release();
 

@@ -33,6 +33,7 @@ public:
 
 	IplImage* getLastImage();
 
+	void *getLastAudioBuffer(int *nBytesWritten);
 	void convertFrameToOpenCV(void* frameBytes, IplImage * m_RGB);
 
 	pthread_mutex_t *sleepMutex;
@@ -63,8 +64,10 @@ public:
 	void initializeCamera(IDeckLink * _deckLink);
 
 	IplImage * captureLastFrame();
+	IplImage * captureLastFrameAndAudio(void **ptrToAudio, int *nBytes);
 	cv::Mat captureLastCvMatClone();
 	cv::Mat captureLastCvMat(IplImage **p);
+	cv::Mat captureLastCvMatAndAudio(IplImage **p, void **ptrToAudio, int *nBytesToAudio);
 	void getAudioData(void **pointerToData, int *size);
 private:
 	IDeckLink *deckLink;
