@@ -279,6 +279,8 @@ std::string getNameOfState(outputState o){
 			return "No video";
 		case S_BLACK_SCREEN:
 			return "Black Screen";
+		case S_FREEZE_SIGNAL_NO_AUDIO:
+			return "Freeze and no audio";
 	}
 	return "Not found";
 }
@@ -288,6 +290,8 @@ outputState getStateByName(std::string name){
 		return S_LIVE_SIGNAL;
 	else if(name == "FREEZE")
 		return S_FREEZE_SIGNAL;
+	else if(name == "FREEZE_NO_AUDIO")
+			return S_FREEZE_SIGNAL_NO_AUDIO;
 	else if(name == "BLACK")
 		return S_BLACK_SCREEN;
 	else if(name == "NOSIGNAL")

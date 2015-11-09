@@ -1,9 +1,9 @@
 //============================================================================
 // Name        : IntensityAquisition.cpp
-// Author      : Filipe Caldas
-// Version     :
+// Author      : Filipe Caldas (fcaldas@canal-plus.fr)
+// Version     : 1.0
 // Copyright   : 
-// Description : Hello World in C, Ansi-style
+// Description : Video acquisition an analysis software
 //============================================================================
 
 #include <iostream>
@@ -13,7 +13,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <omp.h>
 #include "ServerInstance/ServerInstance.h"
-#include "websocket/SSEServer.h"
 using namespace std;
 
 int main(int argc, char **argv) {
