@@ -146,8 +146,9 @@ bool hdmiWatchdog::checkForAudio(short *audioData, unsigned int nElements){
 	for(unsigned int i = 0; i < nElements; i++)
 		if(audioData[i] > max)
 			max = audioData[i];
-	if(max > freezeThreshold)
+	if(max > soundThreshold){
 		return true;
+	}
 	return false;
 }
 
@@ -161,6 +162,8 @@ void hdmiWatchdog::launchWatchdog(){
 	bool searchFreeze = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL) != eventsSearch.end());
 	bool searchLive   = (std::find(eventsSearch.begin(), eventsSearch.end(), S_LIVE_SIGNAL)   != eventsSearch.end());
 	bool searchFreezeNoAudio = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL_NO_AUDIO) != eventsSearch.end());
+
+//	std::cout<<"Search freeze no audio = "<<searchFreezeNoAudio<<std::endl;
 
 	outputState lastCapturedState = S_NOT_FOUND;
 	outputState newCapturedState = S_NOT_FOUND;
@@ -221,9 +224,9 @@ void hdmiWatchdog::launchWatchdog(){
 			}
 			//check if any of the frames has audio in them
 			bool hasAudio = false;
-			for(unsigned int i = 0; i < imageList.size(); i++)
+			for(unsigned int i = 0; i < imageList.size(); i++){
 				hasAudio = (imageList[i].hasAudio == true || hasAudio) ? true: false;
-
+			}
 			maxDiff = maxDiff / npixel;
 			if (searchLive && maxDiff > freezeThreshold) {
 				this->mutexAccessSharedMessages.lock();
@@ -301,7 +304,7 @@ void hdmiWatchdog::launchWatchdog(){
 		}
 		gettimeofday(&t1, NULL);
 
-		std::cout<<"Tloop = "<<((t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000))<<std::endl;
+//		std::cout<<"Tloop = "<<((t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000))<<std::endl;
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 + culmulativeDelay < 1000 * dt_interFramems){
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 - culmulativeDelay));
 			culmulativeDelay = 0;
