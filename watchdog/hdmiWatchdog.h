@@ -73,7 +73,7 @@ private:
 
 	hdmiWatchdog(); //constructor is PRIVATE
 	std::string getRandomName(int size);
-	std::string createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID);
+	std::string createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix);
 public:
     static hdmiWatchdog& getInstance();
     std::vector<eventToReport> getIncidents();
