@@ -32,7 +32,7 @@ namespace RestServer {
 	};
 
 	/* Callbacks */
-	enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_FREEZE_SIGNAL_NO_AUDIO, S_BLACK_SCREEN, S_NO_VIDEO, S_NOT_FOUND};
+	enum outputState{S_LIVE_SIGNAL, S_FREEZE_SIGNAL, S_FREEZE_SIGNAL_NO_AUDIO, S_BLACK_SCREEN, S_BLACK_SCREEN_NO_AUDIO, S_NO_VIDEO, S_NOT_FOUND};
 	std::string getNameOfState(outputState o);
 	outputState getStateByName(std::string name);
 

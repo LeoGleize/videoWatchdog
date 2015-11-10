@@ -46,7 +46,7 @@ namespace RestServer {
 		myListeners.push_back(http_listener(myRoute4));
 		myListeners[4].support(methods::POST, wwwcheckimage);
 
-		web::uri myRoute5("http://0.0.0.0:8080/checkSound");
+		web::uri myRoute5("http://0.0.0.0:8080/getRawSound");
 		myListeners.push_back(http_listener(myRoute5));
 		myListeners[5].support(methods::GET, wwwgetSound);
 
