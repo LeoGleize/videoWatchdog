@@ -307,7 +307,7 @@ void hdmiWatchdog::launchWatchdog(){
 				this->mutexAccessSharedMessages.lock();
 				if(this->eventList.size() > 0){
 					this->eventList[eventList.size() - 1 ].finished = true;
-					this->eventList[eventList.size() - 1 ].eventID = eventCounter++;
+//					this->eventList[eventList.size() - 1 ].eventID = eventCounter++;
 				}
 				this->mutexAccessSharedMessages.unlock();
 			}
