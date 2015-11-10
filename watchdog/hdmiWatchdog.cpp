@@ -122,11 +122,11 @@ bool hdmiWatchdog::stop(){
 	return false;
 }
 
-std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID){
+std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix){
 	web::json::value watchConfig = config["watchdog"];
 	std::string dirToSave = watchConfig["saveVideosTo"].as_string();
 
-	std::string fname = "logVideo_" + getRandomName(5) + "_" + std::to_string(eventID) + ".avi";
+	std::string fname = "logVideo_" + getRandomName(5) + "_" + std::to_string(eventID) + "_" + suffix + ".avi";
 	cv::Size s(toDump.front().mat.cols, toDump.front().mat.rows);
 
 	videoWriter.open(dirToSave + fname, __MY_CODEC, 5, s);
@@ -240,7 +240,7 @@ void hdmiWatchdog::launchWatchdog(){
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
 					newEvent.eventType = S_LIVE_SIGNAL;
-					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
+					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter, "live");
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
@@ -259,7 +259,7 @@ void hdmiWatchdog::launchWatchdog(){
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
 					newEvent.eventType = S_BLACK_SCREEN;
-					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
+					newEvent.videoName = createVideoAndDumpFiles(imageList, eventCounter, "black");
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
@@ -282,7 +282,10 @@ void hdmiWatchdog::launchWatchdog(){
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
 					newEvent.eventType = (hasAudio)?S_FREEZE_SIGNAL:S_FREEZE_SIGNAL_NO_AUDIO;
-					newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter);
+					if(hasAudio)
+						newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter, "freeze");
+					else
+						newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter, "freezemute");
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
