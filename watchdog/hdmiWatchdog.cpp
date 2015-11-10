@@ -223,9 +223,9 @@ void hdmiWatchdog::launchWatchdog(){
 				maxDiff = (n1 > maxDiff) ? n1 : maxDiff;
 				maxDiff = (n2 > maxDiff) ? n2 : maxDiff;
 			}
-			//check if any of the frames has audio in them
+			//check if any of the frames has audio in them (except first)
 			bool hasAudio = false;
-			for(unsigned int i = 0; i < imageList.size(); i++){
+			for(unsigned int i = 1; i < imageList.size(); i++){
 				hasAudio = (imageList[i].hasAudio == true || hasAudio) ? true: false;
 			}
 			maxDiff = maxDiff / npixel;
@@ -307,7 +307,6 @@ void hdmiWatchdog::launchWatchdog(){
 				this->mutexAccessSharedMessages.lock();
 				if(this->eventList.size() > 0){
 					this->eventList[eventList.size() - 1 ].finished = true;
-//					this->eventList[eventList.size() - 1 ].eventID = eventCounter++;
 				}
 				this->mutexAccessSharedMessages.unlock();
 			}
