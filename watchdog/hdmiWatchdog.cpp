@@ -126,7 +126,7 @@ std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDu
 	web::json::value watchConfig = config["watchdog"];
 	std::string dirToSave = watchConfig["saveVideosTo"].as_string();
 
-	std::string fname = "logVideo_" + getRandomName(5) + "_" + std::to_string(eventID) + "_" + suffix + ".avi";
+	std::string fname = "logvideo_" + std::to_string(eventID) + "_" + suffix + "_" + getRandomName(3) + ".avi";
 	cv::Size s(toDump.front().mat.cols, toDump.front().mat.rows);
 
 	videoWriter.open(dirToSave + fname, __MY_CODEC, 5, s);
@@ -162,6 +162,7 @@ void hdmiWatchdog::launchWatchdog(){
 	bool searchFreeze = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL) != eventsSearch.end());
 	bool searchLive   = (std::find(eventsSearch.begin(), eventsSearch.end(), S_LIVE_SIGNAL)   != eventsSearch.end());
 	bool searchFreezeNoAudio = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL_NO_AUDIO) != eventsSearch.end());
+	bool searchBlackNoAudio  = (std::find(eventsSearch.begin(), eventsSearch.end(), S_BLACK_SCREEN_NO_AUDIO)  != eventsSearch.end());
 
 //	std::cout<<"Search freeze no audio = "<<searchFreezeNoAudio<<std::endl;
 
@@ -246,9 +247,13 @@ void hdmiWatchdog::launchWatchdog(){
 				}
 				this->mutexAccessSharedMessages.unlock();
 				newCapturedState = S_LIVE_SIGNAL;
-			} else if (searchBlack
-					&& maxDiff < freezeThreshold
-			        && imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold)) {
+			} else if ((searchBlack
+					 && maxDiff < freezeThreshold
+			         && imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
+					 || (searchBlackNoAudio
+					 && hasAudio == false
+					 && maxDiff < freezeThreshold
+					 && imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))) {
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_BLACK_SCREEN){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
@@ -258,8 +263,11 @@ void hdmiWatchdog::launchWatchdog(){
 					newEvent.finished = false;
 					newEvent.howLong = tEventMS;
 					newEvent.time_when = std::time(NULL);
-					newEvent.eventType = S_BLACK_SCREEN;
-					newEvent.videoName = createVideoAndDumpFiles(imageList, eventCounter, "black");
+					newEvent.eventType = (hasAudio)?S_BLACK_SCREEN:S_BLACK_SCREEN_NO_AUDIO;
+					if(hasAudio)
+						newEvent.videoName = createVideoAndDumpFiles(imageList, eventCounter, "black");
+					else
+						newEvent.videoName = createVideoAndDumpFiles(imageList, eventCounter, "blackmute");
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
 				}
