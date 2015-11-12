@@ -16,7 +16,7 @@ enum FRAME_STATE{DECKLINK_VIDEO_OK, DECKLINK_NO_VIDEO_INPUT};
 
 class DeckLinkCaptureDelegate: public IDeckLinkInputCallback {
 public:
-	DeckLinkCaptureDelegate();
+	DeckLinkCaptureDelegate(bool isFullHD);
 	~DeckLinkCaptureDelegate();
 
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID iid, LPVOID *ppv) {
@@ -59,7 +59,7 @@ private:
 
 class CameraDecklink {
 public:
-	CameraDecklink();
+	CameraDecklink(bool isFullHD);
 
 	void initializeCamera(IDeckLink * _deckLink);
 
@@ -69,7 +69,9 @@ public:
 	cv::Mat captureLastCvMat(IplImage **p);
 	cv::Mat captureLastCvMatAndAudio(IplImage **p, void **ptrToAudio, int *nBytesToAudio);
 	void getAudioData(void **pointerToData, int *size);
+	bool getIsFullHD();
 private:
+	bool isFullHD;
 	IDeckLink *deckLink;
 	IDeckLinkIterator *deckLinkIterator;
 	DeckLinkCaptureDelegate *delegate;

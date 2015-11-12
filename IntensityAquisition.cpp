@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 	RestServer::ServerInstance myServer;
 	bool showScreen = true;
 	bool resize = false;
+	bool isFullHD = true;
 	int Xres, Yres;
 	if (argc == 2 && strcmp(argv[1], "-h") == 0) {
 		std::cout << "Intensity Pro Acquisition Server" << std::endl
@@ -28,6 +29,7 @@ int main(int argc, char **argv) {
 				<< "	-no-video : video display is not shown, server will be executed normally"
 				<< std::endl;
 		std::cout << "    -res X Y  : set resolution of window" << std::endl;
+		std::cout << "    -720p : set resolution of input to 720p instead of 1080i" << std::endl;
 		return 0;
 	} else if (argc == 2 && strcmp(argv[1], "-no-video") == 0) {
 		showScreen = false;
@@ -37,10 +39,13 @@ int main(int argc, char **argv) {
 		Xres = std::atoi(argv[2]);
 		Yres = std::atoi(argv[3]);
 		resize = true;
+	} else if (argc == 2 && strcmp(argv[1], "-720p") == 0) {
+		std::cout << "Output set to 720p"<< std::endl;
+		isFullHD = false;
 	}
 	CameraDecklink *camera1;
 
-	camera1 = new CameraDecklink();
+	camera1 = new CameraDecklink(isFullHD);
 	RestServer::ServerInstance::cameraDeckLink = camera1;
 
 	myServer.start();
@@ -55,7 +60,10 @@ int main(int argc, char **argv) {
 				img = camera1->captureLastCvMat(&dataToFree);
 				deleteAfter = true;
 			}catch(const CardException &e){
-				img = cv::Mat(1080,1920, CV_8UC3, cv::Scalar(0,0,0));
+				if(isFullHD)
+					img = cv::Mat(1080,1920, CV_8UC3, cv::Scalar(0,0,0));
+				else
+					img = cv::Mat(720,1280, CV_8UC3, cv::Scalar(0,0,0));
 				cv::putText( img,
 							 e.what(),
 			    			 cv::Point(100,100),

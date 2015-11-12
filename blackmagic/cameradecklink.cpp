@@ -11,7 +11,7 @@
 using namespace std;
 #define FIX_RESOLUTION 1
 
-CameraDecklink::CameraDecklink() {
+CameraDecklink::CameraDecklink(bool isFullHD) {
 
 	deckLinkIterator = CreateDeckLinkIteratorInstance();
 
@@ -30,11 +30,14 @@ CameraDecklink::CameraDecklink() {
 	}
 
 	this->initializeCamera(deckLink);
+	this->isFullHD = isFullHD;
 
 	return;
-
 }
 
+bool CameraDecklink::getIsFullHD(){
+	return this->isFullHD;
+}
 
 void CameraDecklink::bail(){
 	if (deckLink != NULL) {
@@ -59,7 +62,7 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 			(void**) &deckLinkInput) != S_OK)
 		return;
 
-	delegate = new DeckLinkCaptureDelegate();
+	delegate = new DeckLinkCaptureDelegate(isFullHD);
 	pthread_mutex_init(delegate->sleepMutex, NULL);
 	pthread_cond_init(delegate->sleepCond, NULL);
 
@@ -84,7 +87,10 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 			selectedDisplayMode = displayMode->GetDisplayMode();
 
 #ifdef FIX_RESOLUTION
-			selectedDisplayMode = bmdModeHD1080i50;
+			if(isFullHD)
+				selectedDisplayMode = bmdModeHD1080i50;
+			else
+				selectedDisplayMode = bmdModeHD720p50;
 #endif
 			deckLinkInput->DoesSupportVideoMode(selectedDisplayMode,
 					pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
@@ -222,7 +228,7 @@ void CameraDecklink::getAudioData(void **pointerToData, int *size){
 	this->delegate->getAudioData(pointerToData, size);
 }
 
-DeckLinkCaptureDelegate::DeckLinkCaptureDelegate() :
+DeckLinkCaptureDelegate::DeckLinkCaptureDelegate(bool isFullHD) :
 		m_refCount(0) {
 	this->frameState = DECKLINK_VIDEO_OK;
 	pthread_mutex_init(&m_mutex, NULL);
@@ -235,8 +241,13 @@ DeckLinkCaptureDelegate::DeckLinkCaptureDelegate() :
 
 	g_timecodeFormat = 0;
 
-	height = 1080;
-	width = 1920;
+	if(isFullHD){
+		height = 1080;
+		width = 1920;
+	}else{
+		height = 720;
+		width = 1280;
+	}
 	audioWrite.open("rawaudio.raw", std::ofstream::binary);
 }
 
@@ -359,6 +370,10 @@ IplImage* DeckLinkCaptureDelegate::getLastImage() {
 	}
 }
 
+/**
+ * IntensityPro cards get video Frames in an YUV format but OpenCV frames are in an
+ * BGR format, the folowing routine does the conversion
+ */
 void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		IplImage * m_RGB) {
 	if (!m_RGB)
@@ -377,9 +392,9 @@ void DeckLinkCaptureDelegate::convertFrameToOpenCV(void* frameBytes,
 		m_RGB->imageData[i] = cv::saturate_cast<uchar>(y+1.772*(u-128));                       // b
 
 		y = pData[j + 3];
-		m_RGB->imageData[i + 5] = cv::saturate_cast<uchar>(y+1.402*(v-128));          			// r
-		m_RGB->imageData[i + 4] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));    // g
-		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                    // b
+		m_RGB->imageData[i + 5] = cv::saturate_cast<uchar>(y+1.402*(v-128));          		   // r
+		m_RGB->imageData[i + 4] = cv::saturate_cast<uchar>(y-0.344*(u-128)-0.71414*(v-128));   // g
+		m_RGB->imageData[i + 3] = cv::saturate_cast<uchar>(y+1.772*(u-128));                   // b
 	}
 
 }
