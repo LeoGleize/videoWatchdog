@@ -12,7 +12,8 @@ x * imageRecognition.cpp
 namespace imageRecognition {
 
 	bool isImageBlackScreenOrZapScreen(cv::Mat &img, const cv::Vec3b &thresholdColor){
-		cv::Mat subrect(img, cv::Rect(5,150,img.cols-10,600));
+		cv::Mat subrect(img, cv::Rect(5,0.14 * img.rows,img.cols-10,img.rows * 0.55));
+
 		cv::Mat grayScale;
 		double minVal, maxVal;
 		cv::Point minloc, maxloc;
