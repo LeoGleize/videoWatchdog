@@ -56,6 +56,11 @@ web::json::value incidentToJSON(eventToReport &evt){
 	return objTest;
 }
 
+
+std::time_t hdmiWatchdog::getTimeStart(){
+	return this->startTime;
+}
+
 std::string hdmiWatchdog::getRandomName(int size){
 	boost::random::random_device rng;
 	boost::random::uniform_int_distribution<> index_dist(0, watchdog::chars.size() - 1);
@@ -83,6 +88,7 @@ bool hdmiWatchdog::start(std::list<outputState> eventsSearch, long tEvent){
 		threadWatcher = new std::thread(&hdmiWatchdog::launchWatchdog, this);
 		mutexLaunch.unlock();
 		eventCounter = 0;
+		this->startTime = std::time(NULL);
 		return true;
 	}else{
 		//if is running restart
@@ -96,6 +102,7 @@ bool hdmiWatchdog::start(std::list<outputState> eventsSearch, long tEvent){
 		threadWatcher = new std::thread(&hdmiWatchdog::launchWatchdog, this);
 		mutexLaunch.unlock();
 		eventCounter = 0;
+		this->startTime = std::time(NULL);
 		return true;
 	}
 }
