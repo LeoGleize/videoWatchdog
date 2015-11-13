@@ -1,4 +1,4 @@
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0  -std=c++11 --fast-math
+CXXFLAGS =	-O3 -g -Wall -fmessage-length=0  -std=c++11 --fast-math
 
 OBJS =		IntensityAquisition.o blackmagic/cameradecklink.o blackmagic/cardSDK/DeckLinkAPIDispatch.o  \
 			ServerInstance/ServerInstance.o ServerInstance/detectState.o recognition/imageRecognition.o \

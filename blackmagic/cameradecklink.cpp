@@ -9,10 +9,9 @@
 #include <sys/time.h>
 
 using namespace std;
-#define FIX_RESOLUTION 1
 
 CameraDecklink::CameraDecklink(bool isFullHD) {
-
+	this->isFullHD = isFullHD;
 	deckLinkIterator = CreateDeckLinkIteratorInstance();
 
 	HRESULT result;
@@ -28,10 +27,7 @@ CameraDecklink::CameraDecklink(bool isFullHD) {
 		fprintf(stderr, "No DeckLink PCI cards found.\n");
 		bail();
 	}
-
 	this->initializeCamera(deckLink);
-	this->isFullHD = isFullHD;
-
 	return;
 }
 
@@ -86,12 +82,14 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 			displayMode->GetName(&displayModeName);
 			selectedDisplayMode = displayMode->GetDisplayMode();
 
-#ifdef FIX_RESOLUTION
-			if(isFullHD)
+			if(isFullHD){
+				std::cout<<"Setting screen resolution to HD1080i50"<<std::endl;
 				selectedDisplayMode = bmdModeHD1080i50;
-			else
+			}else{
+				std::cout<<"Setting screen resolution to HD720p50"<<std::endl;
 				selectedDisplayMode = bmdModeHD720p50;
-#endif
+			}
+
 			deckLinkInput->DoesSupportVideoMode(selectedDisplayMode,
 					pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
 
