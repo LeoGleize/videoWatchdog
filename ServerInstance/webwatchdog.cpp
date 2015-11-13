@@ -101,7 +101,12 @@ namespace RestServer{
 					incidents[i] = objTest;
 				}
 				reply["incidents"] = incidents;
-
+				char buffer[32];
+				struct tm * timeinfo;
+				std::time_t tstart = watcher.getTimeStart();
+				timeinfo = localtime(&(tstart));
+				std::strftime(buffer, 32, "%d.%m.%Y %H:%M:%S", timeinfo);
+				reply["startTime"] = web::json::value::string(buffer);
 			}else{
 				reply["error"] = 1;
 				reply["message"] = web::json::value::string("Could not stop watchdog: not running");
@@ -134,8 +139,13 @@ namespace RestServer{
 				objTest = watchdog::incidentToJSON(events[i]);
 				incidents[i] = objTest;
 			}
-			if(events.size() > 0)
-				myReply["incidents"] = incidents;
+			char buffer[32];
+			struct tm * timeinfo;
+			std::time_t tstart = watcher.getTimeStart();
+			timeinfo = localtime(&(tstart));
+			std::strftime(buffer, 32, "%d.%m.%Y %H:%M:%S", timeinfo);
+			myReply["startTime"] = web::json::value::string(buffer);
+			myReply["incidents"] = incidents;
 		}
 
 		request.reply(status_codes::OK,myReply);

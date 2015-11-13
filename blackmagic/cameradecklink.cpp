@@ -100,15 +100,6 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 				return;
 			}
 
-//			if (inputFlags & bmdVideoInputDualStream3D) {
-//				if (!(displayMode->GetFlags() & bmdDisplayModeSupports3D)) {
-//					fprintf(stderr,
-//							"The display mode %s is not supported with 3D\n",
-//							displayModeName);
-//					return;
-//				}
-//			}
-
 			break;
 		}
 		displayModeCount++;

@@ -66,6 +66,7 @@ private:
 	std::mutex mutexLaunch;
 	std::mutex mutexAccessSharedMessages;
 	web::json::value config;
+	std::time_t startTime;
 	std::list<outputState> eventsSearch;
 	long tEventMS;
 	void launchWatchdog();
@@ -80,6 +81,7 @@ public:
     bool start(std::list<outputState> eventsSearch, long tEvent);
     bool stop();
     bool isWatcherRunning();
+    std::time_t getTimeStart();
     // C++ 11
     // =======
     // We can use the better technique of deleting the methods
