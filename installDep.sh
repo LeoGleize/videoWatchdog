@@ -6,6 +6,7 @@ sudo dpkg -i BlackmagicSoftware/deb/amd64/desktopvideo_10.5a17_amd64.deb
 sudo dpkg -i BlackmagicSoftware/deb/amd64/desktopvideo-gui_10.5a17_amd64.deb
 sudo dpkg -i BlackmagicSoftware/deb/amd64/mediaexpress_3.4.1a2_amd64.deb
 sudo chmod -R 777 /var/www
+cp html/* /var/www/html
 git clone https://git.codeplex.com/casablanca
 cd casablanca/Release
 mkdir build.release
