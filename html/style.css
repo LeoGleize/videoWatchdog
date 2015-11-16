@@ -1,0 +1,114 @@
+
+.header{
+	background-color: #CFCFCF;
+	width: 100%;
+	height: 50px;
+	background: linear-gradient(to bottom, rgba(76,76,76,1) 0%, rgba(89,89,89,1) 12%, rgba(102,102,102,1) 25%, rgba(71,71,71,1) 39%, rgba(44,44,44,1) 50%, rgba(0,0,0,1) 51%, rgba(17,17,17,1) 60%, rgba(43,43,43,1) 76%, rgba(28,28,28,1) 91%, rgba(19,19,19,1) 100%);
+	text-align: center;
+	font-family:  ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
+	font-weight: bold;
+	color: #FFFFFF;
+	font-size: 20px;
+	display: block;
+}
+
+p{
+	display:table-cell;
+	vertical-align: middle;
+	vertical-align:middle;
+	display:table-cell;
+    vertical-align:middle;
+    height: 50px;
+    width: 100%;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    color: #333333;
+	font-family:  ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
+
+}
+
+.chart {
+	shape-rendering: crispEdges;
+}
+
+.mini text {
+	font: 9px sans-serif;	
+}
+
+.main text {
+	font: 12px sans-serif;	
+}
+
+.miniItem0 {
+	fill: darksalmon;
+	stroke-width: 6;	
+}
+
+.miniItem1 {
+	fill: darkolivegreen;
+	fill-opacity: .7;
+	stroke-width: 6;	
+}
+
+.miniItem2 {
+	fill: slategray;
+	fill-opacity: .7;
+	stroke-width: 6;	
+}
+
+.miniItem3 {
+	fill: purple;
+	stroke-width: 6;	
+}
+
+.miniItem4 {
+	fill: lightblue;
+	fill-opacity: .7;
+	stroke-width: 6;	
+}
+
+.miniItem5 {
+	fill: orange;
+	fill-opacity: .7;
+	stroke-width: 6;	
+}
+
+.miniItem6 {
+	fill: red;
+	fill-opacity: .7;
+	stroke-width: 6;	
+}
+
+.brush .extent {
+	stroke: gray;
+	fill: dodgerblue;
+	fill-opacity: .365;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: #575757;
+	shape-rendering: crispEdges;
+
+}
+
+#showEvt{
+	margin-left: 50px;
+	margin-top: 20px;
+	width: 800px;
+	background-color: #FFFFFF;
+}
+
+.formShow{
+	font: 13px sans-serif;
+	font-weight: bold;
+	color:#000000;
+}
+
+.formData{
+	font: 13px sans-serif;
+	color:#000000;
+}
