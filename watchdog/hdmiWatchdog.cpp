@@ -46,6 +46,16 @@ hdmiWatchdog::hdmiWatchdog(){
 	 this->config = web::json::value::parse(data);
 }
 
+/*
+ * Write one frame to video
+ */
+void hdmiWatchdog::writeFrame(cv::Mat &mat){
+	web::json::value watchConfig = config["watchdog"];
+	if(watchConfig["saveVideos"].as_bool() == true){
+		videoWriter.write(mat);
+	}
+}
+
 web::json::value incidentToJSON(eventToReport &evt){
 	web::json::value objTest;
 	objTest["event"] = web::json::value::string(getNameOfState(evt.eventType));
@@ -141,6 +151,8 @@ bool hdmiWatchdog::stop(){
 
 std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix){
 	web::json::value watchConfig = config["watchdog"];
+	if(watchConfig["saveVideos"].as_bool() == false)
+		return "";
 	std::string dirToSave = watchConfig["saveVideosTo"].as_string();
 
 	std::string fname = "logvideo_" + std::to_string(eventID) + "_" + suffix + "_" + getRandomName(3) + ".avi";
@@ -280,7 +292,7 @@ void hdmiWatchdog::launchWatchdog(){
 				if(lastCapturedState == S_LIVE_SIGNAL){
 					//just increment last capture
 					eventList[eventList.size() - 1].howLong += dt_interFramems;
-					videoWriter.write(imageList.back().mat);
+					writeFrame(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
@@ -303,7 +315,7 @@ void hdmiWatchdog::launchWatchdog(){
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_BLACK_SCREEN){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
-					videoWriter.write(imageList.back().mat);
+					writeFrame(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
@@ -329,7 +341,7 @@ void hdmiWatchdog::launchWatchdog(){
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_FREEZE_SIGNAL || lastCapturedState == S_FREEZE_SIGNAL_NO_AUDIO){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
-					videoWriter.write(imageList.back().mat);
+					writeFrame(imageList.back().mat);
 				}else{
 					eventToReport newEvent;
 					newEvent.finished = false;
