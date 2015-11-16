@@ -1,6 +1,6 @@
 sudo apt-get install g++-4.8 g++ git make libboost1.54-all-dev libssl-dev cmake
 sudo apt-get install libopencv-dev
-sudo apt-get install apache2
+sudo apt-get install apache2 php5 php5-curl
 sudo chmod -R 777 /var/www
 git clone https://git.codeplex.com/casablanca
 cd casablanca/Release

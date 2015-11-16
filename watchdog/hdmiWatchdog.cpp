@@ -171,8 +171,6 @@ void hdmiWatchdog::launchWatchdog(){
 	bool searchFreezeNoAudio = (std::find(eventsSearch.begin(), eventsSearch.end(), S_FREEZE_SIGNAL_NO_AUDIO) != eventsSearch.end());
 	bool searchBlackNoAudio  = (std::find(eventsSearch.begin(), eventsSearch.end(), S_BLACK_SCREEN_NO_AUDIO)  != eventsSearch.end());
 
-//	std::cout<<"Search freeze no audio = "<<searchFreezeNoAudio<<std::endl;
-
 	outputState lastCapturedState = S_NOT_FOUND;
 	outputState newCapturedState = S_NOT_FOUND;
 
@@ -198,10 +196,41 @@ void hdmiWatchdog::launchWatchdog(){
 			free(ptrAudioData);
 			imageList.push_back(data);
 		}catch(const CardException &e){
+			/**
+			 * In case of an exception on video acquisition
+			 * we assume that the cable went off.
+			 *
+			 * The only other reason why this could happen would
+			 * be a change in screen resolution in the STB
+			 */
+			if(lastCapturedState != S_NOT_FOUND && newCapturedState != S_NO_VIDEO){
+				this->mutexAccessSharedMessages.lock();
+				if(this->eventList.size() > 0){
+					this->eventList[eventList.size() - 1].finished = true;
+				}
+				this->mutexAccessSharedMessages.unlock();
+			}
+
+			if(lastCapturedState == S_NO_VIDEO){
+				eventList[eventList.size() - 1].howLong += dt_interFramems;
+			}else{
+				eventToReport newEvent;
+				newEvent.finished = false;
+				newEvent.howLong = 100;
+				newEvent.time_when = std::time(NULL);
+				newEvent.eventType = S_NO_VIDEO;
+				newEvent.videoName = "";
+				newEvent.eventID = eventCounter++;
+				eventList.push_back(newEvent);
+			}
+			newCapturedState = S_NO_VIDEO;
+			lastCapturedState = S_NO_VIDEO;
 			usleep(	1000 * dt_interFramems);
-			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl<<std::flush;
+			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl;
 			continue;
 		}
+
+		//Limit the size of the deque
 		if (imageList.size() > nFrames) {
 			IplImage *p = imageList.front().pointerToFree;
 			cvRelease((void **) &p);
@@ -313,7 +342,11 @@ void hdmiWatchdog::launchWatchdog(){
 			if(lastCapturedState != S_NOT_FOUND && lastCapturedState != newCapturedState){
 				this->mutexAccessSharedMessages.lock();
 				if(this->eventList.size() > 0){
-					this->eventList[eventList.size() - 1 ].finished = true;
+					//if we added a new one we will need to go back an extra index
+					if(newCapturedState != S_NOT_FOUND)
+						this->eventList[eventList.size() - 2].finished = true;
+					else
+						this->eventList[eventList.size() - 1].finished = true;
 				}
 				this->mutexAccessSharedMessages.unlock();
 			}
