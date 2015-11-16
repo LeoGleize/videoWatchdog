@@ -75,7 +75,7 @@ namespace RestServer{
 					reply["message"] = web::json::value::string("Watchdog started");
 				}else{
 					reply["error"] = 1;
-					reply["message"] = web::json::value::string("Could not stop watchdog: already running");
+					reply["message"] = web::json::value::string("Could not start watchdog: config.json not found");
 				}
 
 			}else{

@@ -28,8 +28,16 @@ hdmiWatchdog::hdmiWatchdog(){
 	 isRunning = false;
 	 threadWatcher = NULL;
 	 std::ifstream configFile;
-	 configFile.open("config.json");
+	 configFile.open("config.json",std::ios::in);
 	 std::string data = "";
+	 configLoaded = true;
+	 if(configFile.is_open() != true){
+		 configLoaded = false;
+		 std::cout<<"Could not open config.json"<<std::endl;
+		 std::cout<<"This file is required to run HDMIWatchdog"<<std::endl;
+		 std::cout<<"Copy it to the current directory."<<std::endl;
+		 return;
+	 }
 	 while(configFile.eof() != true){
 		 std::string line;
 		 std::getline(configFile, line);
@@ -79,6 +87,8 @@ std::vector<eventToReport> hdmiWatchdog::getIncidents(){
 }
 
 bool hdmiWatchdog::start(std::list<outputState> eventsSearch, long tEvent){
+	if(configLoaded == false)
+		return false;
 	mutexLaunch.lock();
 	if(!isRunning){
 		this->eventsSearch = eventsSearch;

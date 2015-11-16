@@ -68,6 +68,7 @@ private:
 	web::json::value config;
 	std::time_t startTime;
 	std::list<outputState> eventsSearch;
+	bool configLoaded;
 	long tEventMS;
 	void launchWatchdog();
 	bool checkForAudio(short *audioData, unsigned int nElements);
