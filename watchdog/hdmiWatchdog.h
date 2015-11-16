@@ -73,6 +73,7 @@ private:
 	void launchWatchdog();
 	bool checkForAudio(short *audioData, unsigned int nElements);
 
+	void writeFrame(cv::Mat &mat);
 	hdmiWatchdog(); //constructor is PRIVATE
 	std::string getRandomName(int size);
 	std::string createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix);
