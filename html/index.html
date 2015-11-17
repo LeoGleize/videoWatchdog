@@ -16,12 +16,22 @@
 
 
 <div class="header">
-	<p>	&nbsp;&nbsp;&nbsp;R7IntensityPro logs</p>
+
+	<a class="titleText">	&nbsp;&nbsp;&nbsp;R7IntensityPro logs</a>
 </div>
 
 
 	<div id="showEvt">
+
 		<table>
+		<tr>
+			<td>
+				<a class="formShow">Load log file:</a>
+			</td>
+			<td>
+				<input type="file" class="file" name="logFile" id="logFile" onchange="callLoadFile()"/>
+			</td>
+		</tr>
 		<tr>
 			<td>
 				<a class="formShow">When:</a>
@@ -56,10 +66,8 @@
 		</tr>
 		
 		</table>
-		<br/><br/><br/>
+		<br/><br/>
 	</div>
-
-
 
 </body>
 </html>

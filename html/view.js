@@ -1,5 +1,3 @@
-window.onload = function() {
-
   var lanes = ["Freeze","Freeze and no audio","Black Screen","Black Screen and no audio","Live signal","No video","Output not found"];
   var laneLength = lanes.length;
   var timeBegin = 0;
@@ -11,43 +9,8 @@ window.onload = function() {
         return i
     return -1;
   }
-  allData = [];
 
-  function getColorByEvt(evt){
-    if(evt === "Live signal")
-      return "green";
-    else if(evt === "Freeze")
-      return "navy";
-    else if(evt === "Output not found")
-      return "purple";
-    else if(evt === "No video")
-      return "red";
-    else if(evt === "Black Screen")
-      return "gray";
-    else if(evt === "Black Screen and no audio")
-      return "gray";
-    else if(evt === "Freeze and no audio")
-      return "blue";
-    return "black";
-  }
-
-  function drawEventToScreen(id){
-    console.log("id = "+id);
-    console.log(allData[id]);
-    $("#fwhen").text(allData[id].when);
-    $("#ftype").text(allData[id].event);
-    $("#ftime").text(allData[id].duration_ms);
-    $("#fLink").text(allData[id].videoName);
-    $("#fLink").attr("href", allData[id].videoName);
-  }
-
-
-  $.ajax({
-        dataType: "json",
-        url: 'getreport.php',
-        success: function( data ) {
-          console.log("gotData:");
-          console.log(data);
+  function plotData(data){
           var items = [];
           realEndTime = 0;
           allData = data.incidents;
@@ -108,7 +71,8 @@ window.onload = function() {
                 .append("svg")
                 .attr("width", w + m[1] + m[3])
                 .attr("height", h + m[0] + m[2])
-                .attr("class", "chart");
+                .attr("class", "chart")
+                .attr("id", "mainchart");
           
           chart.append("defs").append("clipPath")
             .attr("id", "clip")
@@ -234,27 +198,11 @@ window.onload = function() {
               .call(brush.extent([minExtent, maxExtent]));
 
             x1.domain([minExtent, maxExtent]);
-            console.log(minExtent);
-            console.log(maxExtent);
-            
 
             topTimeScale.domain([minExtent, maxExtent]).range([0, w]);
             var axis = d3.svg.axis().scale(topTimeScale).orient("top");
-            // chart.append("g")
-            //     .attr('class', 'x axis')
-            //     .attr('transform', 'translate(' + m[3] + ',' + m[0] + ')')
-            //     // .style('opacity',0.00)
-            //     // .attr("id", "topScale")
-            //     .call(axis);
-          // chart.append("g")
-          //       .attr('class', 'x axis')
-          //       .attr('transform', 'translate(' + m[3] + ',' + m[0] + ')')
-          //       // .style('opacity',0.00)
-          //       .attr("id", "topScale")
-          //       .call(axis);
 
-            d3.select("#topScale").call(axis);
-            
+            d3.select("#topScale").call(axis);           
 
             //update main item rects
             rects = itemRects.selectAll("rect")
@@ -286,5 +234,82 @@ window.onload = function() {
             labels.exit().remove();
           }
     }
-  });
+
+
+window.onload = function() {
+
+
+  allData = [];
+
+  function getColorByEvt(evt){
+    if(evt === "Live signal")
+      return "green";
+    else if(evt === "Freeze")
+      return "navy";
+    else if(evt === "Output not found")
+      return "purple";
+    else if(evt === "No video")
+      return "red";
+    else if(evt === "Black Screen")
+      return "gray";
+    else if(evt === "Black Screen and no audio")
+      return "gray";
+    else if(evt === "Freeze and no audio")
+      return "blue";
+    return "black";
+  }
+
+  function drawEventToScreen(id){
+    console.log("id = "+id);
+    console.log(allData[id]);
+    $("#fwhen").text(allData[id].when);
+    $("#ftype").text(allData[id].event);
+    $("#ftime").text(allData[id].duration_ms);
+    $("#fLink").text(allData[id].videoName);
+    $("#fLink").attr("href", allData[id].videoName);
+  }
+
+  $.ajax({
+        dataType: "json",
+        url: 'getreport.php',
+        success: function( data ) {
+          plotData(data);
+  }});
+
+}
+
+fr = new FileReader();
+
+function callLoadFile(){
+  if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
+    alert('The File APIs are not fully supported in this browser.');
+    return;
+  }   
+
+  input = document.getElementById('logFile');
+  if (!input) {
+    alert("Um, couldn't find the fileinput element.");
+  }
+  else if (!input.files) {
+    alert("This browser doesn't seem to support the `files` property of file inputs.");
+  }
+  else if (!input.files[0]) {
+    alert("Please select a file before clicking 'Load'");               
+  }
+  else {
+    file = input.files[0];
+  
+    fr.onload = logLoaded;
+    //fr.readAsText(file);
+    fr.readAsText(file);
+  }
+}
+
+function logLoaded(){
+  var jsonDoc = fr.result;
+  var toPlot = JSON.parse(jsonDoc);
+  d3.select("#mainchart").remove();
+  plotData(toPlot);
+  // var json = base64ToJSON(b64);
+  // console.log(json);
 }
