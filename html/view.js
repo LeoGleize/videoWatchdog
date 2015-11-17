@@ -86,7 +86,7 @@ window.onload = function() {
 
           console.log(items);
           var m = [20, 15, 15, 180], //top right bottom left
-            w = 1480 - m[1] - m[3],
+            w = $(document).width() - m[1] - m[3],
             h = 500 - m[0] - m[2],
             miniHeight = laneLength * 12 + 50,
             mainHeight = h - miniHeight - 50;
@@ -128,13 +128,23 @@ window.onload = function() {
                 .attr("height", miniHeight)
                 .attr("class", "mini");
 
-          //draw time scale filipe
           var utcScale = d3.time.scale.utc();
           utcScale.domain([timeBegin, timeEnd]).range([0, w]);
           var axis = d3.svg.axis().scale(utcScale);
           chart.append("g")
                 .attr('class', 'x axis')
                 .attr('transform', 'translate(' + m[3] + ',' + (mainHeight + m[0] * 8) + ')')
+                .style('opacity',0.60)
+                .call(axis);
+
+          var topTimeScale = d3.time.scale.utc();
+          topTimeScale.domain([timeBegin, timeEnd]).range([0, w]);
+          var axis = d3.svg.axis().scale(utcScale).orient("top");
+          chart.append("g")
+                .attr('class', 'x axis')
+                .attr('transform', 'translate(' + m[3] + ',' + m[0] + ')')
+                // .style('opacity',0.00)
+                .attr("id", "topScale")
                 .call(axis);
 
           //main lanes and texts
@@ -224,6 +234,27 @@ window.onload = function() {
               .call(brush.extent([minExtent, maxExtent]));
 
             x1.domain([minExtent, maxExtent]);
+            console.log(minExtent);
+            console.log(maxExtent);
+            
+
+            topTimeScale.domain([minExtent, maxExtent]).range([0, w]);
+            var axis = d3.svg.axis().scale(topTimeScale).orient("top");
+            // chart.append("g")
+            //     .attr('class', 'x axis')
+            //     .attr('transform', 'translate(' + m[3] + ',' + m[0] + ')')
+            //     // .style('opacity',0.00)
+            //     // .attr("id", "topScale")
+            //     .call(axis);
+          // chart.append("g")
+          //       .attr('class', 'x axis')
+          //       .attr('transform', 'translate(' + m[3] + ',' + m[0] + ')')
+          //       // .style('opacity',0.00)
+          //       .attr("id", "topScale")
+          //       .call(axis);
+
+            d3.select("#topScale").call(axis);
+            
 
             //update main item rects
             rects = itemRects.selectAll("rect")
@@ -253,11 +284,7 @@ window.onload = function() {
               .attr("text-anchor", "start");
 
             labels.exit().remove();
-
           }
-
     }
   });
-    
-
 }
