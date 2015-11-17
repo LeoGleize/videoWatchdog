@@ -3,6 +3,34 @@
   var timeBegin = 0;
   var timeEnd = 2000;
 
+  function getColorByEvt(evt){
+    if(evt === "Live signal")
+      return "green";
+    else if(evt === "Freeze")
+      return "navy";
+    else if(evt === "Output not found")
+      return "purple";
+    else if(evt === "No video")
+      return "red";
+    else if(evt === "Black Screen")
+      return "gray";
+    else if(evt === "Black Screen and no audio")
+      return "gray";
+    else if(evt === "Freeze and no audio")
+      return "blue";
+    return "black";
+  }
+
+  function drawEventToScreen(id){
+    console.log("id = "+id);
+    console.log(allData[id]);
+    $("#fwhen").text(allData[id].when);
+    $("#ftype").text(allData[id].event);
+    $("#ftime").text(allData[id].duration_ms);
+    $("#fLink").text(allData[id].videoName);
+    $("#fLink").attr("href", allData[id].videoName);
+  }
+
   function getLaneByEvt(evt){
     for(var i = 0; i < lanes.length; i++)
       if(lanes[i] === evt)
@@ -241,33 +269,6 @@ window.onload = function() {
 
   allData = [];
 
-  function getColorByEvt(evt){
-    if(evt === "Live signal")
-      return "green";
-    else if(evt === "Freeze")
-      return "navy";
-    else if(evt === "Output not found")
-      return "purple";
-    else if(evt === "No video")
-      return "red";
-    else if(evt === "Black Screen")
-      return "gray";
-    else if(evt === "Black Screen and no audio")
-      return "gray";
-    else if(evt === "Freeze and no audio")
-      return "blue";
-    return "black";
-  }
-
-  function drawEventToScreen(id){
-    console.log("id = "+id);
-    console.log(allData[id]);
-    $("#fwhen").text(allData[id].when);
-    $("#ftype").text(allData[id].event);
-    $("#ftime").text(allData[id].duration_ms);
-    $("#fLink").text(allData[id].videoName);
-    $("#fLink").attr("href", allData[id].videoName);
-  }
 
   $.ajax({
         dataType: "json",
