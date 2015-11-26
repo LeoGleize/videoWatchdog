@@ -1,6 +1,8 @@
-#R7IntensityProServer
+#VideoWatchdog
 
-R7IntensityPro Server is a software developed for screen monitoring and video processing using an IntensityPro acquisition card. The main idea is to connect a STB as video input and offer multiple possibilities of image analysis and event detection, the project was written in C++ and is divided in the following components:
+VideoWatchdog is a software developed for screen monitoring and video processing using an IntensityPro acquisition card. The main idea is to connect a STB as video input and analyze its data, creating events for state changes and implementing other forms of data acquisition to automate the process of testing.
+
+  The project was written in C++ and is divided in the following components:
 
 * Main thread: implemented in ./IntensityAcquisition.cpp, this file is responsible for generating real time video output using the data acquired from IntensityPro.
 
@@ -12,15 +14,18 @@ R7IntensityPro Server is a software developed for screen monitoring and video pr
 
 * watchdog/: Implementation of an watchdog that monitors all video output and reports events.
 
-To build R7IntensityPro first run the script installDep.sh, this will install all the dependencies needed, and then you can simply run 'make' and 'sudo make install'. Before running the program you'll need to open "Blackmagic Desktop Video Utility" and change "video input" to "component" instead of "hdmi". Now you can use Media Express and check you also need to change the resolution on Edit -> Preferences -> "Project Video Format" to either 1080i50 or 720p50 depending on your STB configuration.
+To build R7IntensityPro first run the script installDep.sh, this will install all the dependencies needed, and then you can simply run 'make' and 'sudo make install'. 
+
+Before running the program you'll need to open "Blackmagic Desktop Video Utility" and change "video input" to the video input you are using ("component" instead of "hdmi" if using an HDFury). 
+Now you can use Media Express and check you also need to change the resolution on Edit -> Preferences -> "Project Video Format" to either 1080i50 or 720p50 depending on your STB configuration.
 If the card is working correctly, you can see the frames being acquired on "Log and capture" tab. 
 
-Now you can copy the file config.json to the directory where you'll be executing R7IntensityProServer, you'll also need to modify this file to point to your IP address.
+Now you can copy the file config.json to the directory where you'll be executing videoWatchdog, you'll also need to modify this file to point to your IP address.
 ```bash	
-./workspace/R7IntensityProServer$ cp config.json ~ ;cd
-$ R7IntensityProServer -h
+./workspace/videoWatchdog$ cp config.json ~ ;cd
+$ videoWatchdog -h
 ```
-##Intensity Pro Acquisition Server
+##Video Watchdog
 
 ###Options:
 
@@ -28,9 +33,9 @@ $ R7IntensityProServer -h
     -res X Y  : set resolution of window
     -720p : set resolution of input to 720p instead of 1080i
 
-###API REST
+##REST API
 
-The server exposes an API REST on page 8080 with the following routes:
+The server exposes an REST API on page 8080 with the following routes:
 
 | Route        | Function       | Method | Arguments |
 | ------------- |:-------------|:-----:|---------|
@@ -76,8 +81,6 @@ You can do a get request on /report, both this request and a command to stop the
   "startTime": "17.11.2015 15:02:49"
 }
 ```
-
-
 
 
 ###dependencies:

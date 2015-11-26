@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	bool isFullHD = true;
 	int Xres, Yres;
 	if (argc == 2 && strcmp(argv[1], "-h") == 0) {
-		std::cout << "Intensity Pro Acquisition Server" << std::endl
+		std::cout << "videoWatchdog Server" << std::endl
 				<< std::endl;
 		std::cout << "Options:" << std::endl;
 		std::cout
@@ -73,11 +73,11 @@ int main(int argc, char **argv) {
 			    		   );
 			}
 			if (!resize){
-				cv::imshow("R7IntensityProServer", img);
+				cv::imshow("VideoWatchdog Server", img);
 			}else {
 				cv::Mat resizedimg(Yres, Xres, CV_8U);
 				cv::resize(img, resizedimg, resizedimg.size(), 0, 0, cv::INTER_CUBIC);
-				cv::imshow("R7IntensityProServer", resizedimg);
+				cv::imshow("VideoWatchdog Server", resizedimg);
 			}
 			if(deleteAfter)
 				cvRelease((void**) &dataToFree);
