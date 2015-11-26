@@ -164,6 +164,10 @@ __screenState getState(int dt_ms) {
 	return reply;
 }
 
+/*
+ * Monitors state changes on screen, this has a limit of around 20 seconds,
+ * for anything longer use HDMI watchdog
+ */
 __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 									  unsigned int timeAnalysis,
 									  unsigned int timeEvent,

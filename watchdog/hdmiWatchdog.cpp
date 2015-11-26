@@ -56,6 +56,9 @@ void hdmiWatchdog::writeFrame(cv::Mat &mat){
 	}
 }
 
+/*
+ * Transforms an eventToReport object into an json::value.
+ */
 web::json::value incidentToJSON(eventToReport &evt){
 	web::json::value objTest;
 	objTest["event"] = web::json::value::string(getNameOfState(evt.eventType));
@@ -79,6 +82,10 @@ std::time_t hdmiWatchdog::getTimeStart(){
 	return this->startTime;
 }
 
+/*
+ * Generates an random name with length = size
+ * used for video name generation
+ */
 std::string hdmiWatchdog::getRandomName(int size){
 	boost::random::random_device rng;
 	boost::random::uniform_int_distribution<> index_dist(0, watchdog::chars.size() - 1);
@@ -89,6 +96,10 @@ std::string hdmiWatchdog::getRandomName(int size){
 	return randomName;
 }
 
+/*
+ * Get list of incidents, this has to be accessed with mutexes
+ * since the method might be called by our REST server
+ */
 std::vector<eventToReport> hdmiWatchdog::getIncidents(){
 	this->mutexAccessSharedMessages.lock();
 	std::vector<eventToReport> eventsNow = this->eventList;
@@ -96,6 +107,10 @@ std::vector<eventToReport> hdmiWatchdog::getIncidents(){
 	return eventsNow;
 }
 
+
+/*
+ * Starts watchdog thread
+ */
 bool hdmiWatchdog::start(std::list<outputState> eventsSearch, long tEvent){
 	if(configLoaded == false)
 		return false;
@@ -127,6 +142,9 @@ bool hdmiWatchdog::start(std::list<outputState> eventsSearch, long tEvent){
 	}
 }
 
+/*
+ * Returns a boolean indicating if the watchdog is still running
+ */
 bool hdmiWatchdog::isWatcherRunning(){
 	mutexLaunch.lock();
 	bool v = isRunning;
@@ -134,6 +152,9 @@ bool hdmiWatchdog::isWatcherRunning(){
 	return v;
 }
 
+/*
+ * Stop watchdog thread
+ */
 bool hdmiWatchdog::stop(){
 	this->mutexLaunch.lock();
 	if(isRunning == true){
@@ -149,6 +170,11 @@ bool hdmiWatchdog::stop(){
 	return false;
 }
 
+
+/*
+ * Create a video file and write all frames in &toDump to
+ * the file, to be used when an incident is reported
+ */
 std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix){
 	web::json::value watchConfig = config["watchdog"];
 	if(watchConfig["saveVideos"].as_bool() == false)
@@ -170,6 +196,11 @@ std::string hdmiWatchdog::createVideoAndDumpFiles(std::deque<watchDogData> &toDu
 
 }
 
+/*
+ * Go through *audioData and checks if all values are smaller in module
+ * than a threshold, this is used to verify if audio data is present in a video
+ * frame
+ */
 bool hdmiWatchdog::checkForAudio(short *audioData, unsigned int nElements){
 	short max = 0;
 	for(unsigned int i = 0; i < nElements; i++)
@@ -182,6 +213,9 @@ bool hdmiWatchdog::checkForAudio(short *audioData, unsigned int nElements){
 }
 
 
+/*
+ * Watchdog main loop
+ */
 void hdmiWatchdog::launchWatchdog(){
 	std::cout<<"[+] Starting watchdog"<<std::endl;
 
@@ -281,12 +315,16 @@ void hdmiWatchdog::launchWatchdog(){
 				maxDiff = (n1 > maxDiff) ? n1 : maxDiff;
 				maxDiff = (n2 > maxDiff) ? n2 : maxDiff;
 			}
+
 			//check if any of the frames has audio in them (except first)
 			bool hasAudio = false;
 			for(unsigned int i = 1; i < imageList.size(); i++){
 				hasAudio = (imageList[i].hasAudio == true || hasAudio) ? true: false;
 			}
 			maxDiff = maxDiff / npixel;
+			/*
+			 * Detect live signal.
+			 */
 			if (searchLive && maxDiff > freezeThreshold) {
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_LIVE_SIGNAL){
@@ -305,6 +343,9 @@ void hdmiWatchdog::launchWatchdog(){
 				}
 				this->mutexAccessSharedMessages.unlock();
 				newCapturedState = S_LIVE_SIGNAL;
+			/*
+			 * Check if last group of frames are a Black screen.
+			 */
 			} else if ((searchBlack
 					 && maxDiff < freezeThreshold
 			         && imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
@@ -331,6 +372,9 @@ void hdmiWatchdog::launchWatchdog(){
 				}
 				this->mutexAccessSharedMessages.unlock();
 				newCapturedState = S_BLACK_SCREEN;
+			/*
+			 * Check if last group of frames is a FREEZE
+			 */
 			} else if ((searchFreeze
 					&& maxDiff < freezeThreshold
 					&& !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
@@ -361,6 +405,9 @@ void hdmiWatchdog::launchWatchdog(){
 				newCapturedState = S_NOT_FOUND;
 			}
 
+			/*
+			 * Set finished flag on an event once event has changed
+			 */
 			if(lastCapturedState != S_NOT_FOUND && lastCapturedState != newCapturedState){
 				this->mutexAccessSharedMessages.lock();
 				if(this->eventList.size() > 0){
@@ -376,7 +423,13 @@ void hdmiWatchdog::launchWatchdog(){
 		}
 		gettimeofday(&t1, NULL);
 
-//		std::cout<<"Tloop = "<<((t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000))<<std::endl;
+		/*
+		 * Calculate how long the loop took to be executed an sleep the amount of time
+		 * between each call minus the amount of time the loop took to be executed.
+		 *
+		 * THIS IS NOT EXACT but is close enough for our application
+		 * A better implementation of this can be found on boost::Asio
+		 */
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 + culmulativeDelay < 1000 * dt_interFramems){
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 - culmulativeDelay));
 			culmulativeDelay = 0;

@@ -33,6 +33,9 @@ struct imageReconData{
 
 namespace RestServer {
 
+/*
+ * Checks if an image is present in the current screen
+ */
 void wwwcheckimage(web::http::http_request request){
 	json::value params = request.extract_json().get();
 	json::value reply;

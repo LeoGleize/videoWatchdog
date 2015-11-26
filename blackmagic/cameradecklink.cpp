@@ -217,6 +217,10 @@ void CameraDecklink::getAudioData(void **pointerToData, int *size){
 	this->delegate->getAudioData(pointerToData, size);
 }
 
+
+/*
+ * Create a capture delegate
+ */
 DeckLinkCaptureDelegate::DeckLinkCaptureDelegate(bool isFullHD) :
 		m_refCount(0) {
 	this->frameState = DECKLINK_VIDEO_OK;
