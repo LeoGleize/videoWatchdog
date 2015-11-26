@@ -19,6 +19,14 @@ using namespace web::http;
 using namespace web::http::experimental::listener;
 
 namespace RestServer {
+
+	/*
+	 * Get RAW sound data, this will return an interleaved signed short
+	 * audio file with 2 channels.
+	 *
+	 * You can transform it into an wav file using sox:
+	 * sox -r48000 -e signed-integer -b 16 -c 2 DATA.raw out.wav
+	 */
 	void wwwgetSound(web::http::http_request request){
 		void *data;
 		char *p;
