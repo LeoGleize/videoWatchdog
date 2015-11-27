@@ -36,6 +36,7 @@ struct eventToReport{
 	bool finished;
 	double howLong;
 	std::string videoName;
+	std::string ocr_text; // text on frame
 };
 
 /**
@@ -72,7 +73,7 @@ private:
 	long tEventMS;
 	void launchWatchdog();
 	bool checkForAudio(short *audioData, unsigned int nElements);
-
+	void getImgTextSaveToEvent(cv::Mat m, int evtIndex);
 	void writeFrame(cv::Mat &mat);
 	hdmiWatchdog(); //constructor is PRIVATE
 	std::string getRandomName(int size);

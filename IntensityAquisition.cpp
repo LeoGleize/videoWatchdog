@@ -56,7 +56,6 @@ int main(int argc, char **argv) {
 			bool deleteAfter = false;
 			IplImage *dataToFree;
 			try{
-
 				img = camera1->captureLastCvMat(&dataToFree);
 				deleteAfter = true;
 			}catch(const CardException &e){

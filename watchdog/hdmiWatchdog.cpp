@@ -74,6 +74,7 @@ web::json::value incidentToJSON(eventToReport &evt){
 	objTest["when"] = web::json::value::string(buffer);
 	objTest["duration_ms"] = web::json::value::number(evt.howLong);
 	objTest["videoName"] = web::json::value::string(evt.videoName);
+	objTest["textOnScreen"] = web::json::value::string(evt.ocr_text);
 	return objTest;
 }
 
@@ -376,17 +377,19 @@ void hdmiWatchdog::launchWatchdog(){
 			 * Check if last group of frames is a FREEZE
 			 */
 			} else if ((searchFreeze
-					&& maxDiff < freezeThreshold
-					&& !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
-					|| (searchFreezeNoAudio
-					&& hasAudio == false
-					&& maxDiff < freezeThreshold
-					&& !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold) )) {
+					 && maxDiff < freezeThreshold
+					 && !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold))
+					 || (searchFreezeNoAudio
+					 && hasAudio == false
+					 && maxDiff < freezeThreshold
+					 && !imageRecognition::isImageBlackScreenOrZapScreen(imageList[0].mat,blackThreshold) )) {
 				this->mutexAccessSharedMessages.lock();
 				if(lastCapturedState == S_FREEZE_SIGNAL || lastCapturedState == S_FREEZE_SIGNAL_NO_AUDIO){
 					eventList[eventList.size() - 1 ].howLong += dt_interFramems;
 					writeFrame(imageList.back().mat);
 				}else{
+
+
 					eventToReport newEvent;
 					newEvent.finished = false;
 					newEvent.howLong = tEventMS;
@@ -398,6 +401,10 @@ void hdmiWatchdog::launchWatchdog(){
 						newEvent.videoName = createVideoAndDumpFiles(imageList,eventCounter, "freezemute");
 					newEvent.eventID = eventCounter++;
 					eventList.push_back(newEvent);
+
+					//launch thread for text recognition on image.
+					std::thread ss(&hdmiWatchdog::getImgTextSaveToEvent, this, imageList[imageList.size()-1].mat.clone(), eventList.size() -1);
+					ss.detach();
 				}
 				this->mutexAccessSharedMessages.unlock();
 				newCapturedState = S_FREEZE_SIGNAL;
@@ -448,6 +455,20 @@ void hdmiWatchdog::launchWatchdog(){
 		videoWriter.release();
 
 	std::cout<<"[-] Stopping watchdog"<<std::endl;
+}
+
+/* Uses OCR text recognition to get text from frame */
+void hdmiWatchdog::getImgTextSaveToEvent(cv::Mat m, int evtIndex){
+	std::string text;
+	try{
+		text = imageRecognition::getTextFromImage(m);
+	}catch(const std::exception &e){
+		text = "";
+	}
+	this->mutexAccessSharedMessages.lock();
+	this->eventList[evtIndex].ocr_text = text;
+	this->mutexAccessSharedMessages.unlock();
+	return;
 }
 
 
