@@ -38,7 +38,7 @@ The server exposes an REST API on page 8080 with the following routes:
 | /imageb64 | Get image in base 64 | GET | None  |
 | /getScreenEvent | Search for events in video input | POST | {"eventType": ["LIVE", "FREEZE", "BLACK"],"timeAnalysis":600000, "timeEvent":5000,"count":true}  |
 | /checkForImage | Check if an image is being shown in the screen | POST | {"imageURL":"http://image.to.search/img.png","returnImage":true}  |
-
+| /text      | Executes an OCR text recognition on the current STB output and returns the text being shown |   GET |  None |
 
 Two other routes were created to control the watchdog, the first one is /watchdog that accepts two arguments via POST.
 
