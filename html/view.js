@@ -29,6 +29,7 @@
     $("#ftime").text(allData[id].duration_ms);
     $("#fLink").text(allData[id].videoName);
     $("#fLink").attr("href", allData[id].videoName);
+    $("#ftext").text(allData[id].textOnScreen);
   }
 
   function getLaneByEvt(evt){
