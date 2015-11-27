@@ -8,6 +8,7 @@ x * imageRecognition.cpp
 #include "imageRecognition.h"
 #include <iostream>
 //#include <opencv2/features2d.hpp>
+#include <tesseract/baseapi.h>
 
 namespace imageRecognition {
 
@@ -50,4 +51,29 @@ namespace imageRecognition {
 		return match;
 	}
 
+	/*
+	 * Performs OCR extracting text from image.
+	 *
+	 * Uses french libraries for character recognition.
+	 */
+	std::string getTextFromImage(cv::Mat &img){
+		cv::Mat inverted, bw;
+		//we invert the image and threshold it before
+		//doing character recognition
+		cv::bitwise_not(img,inverted);
+		cv::cvtColor( inverted, bw, CV_RGB2GRAY);
+		// Initialize tesseract-ocr
+		tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+	    if (api->Init(NULL, "fra") != 0){
+	        std::cerr << "Could not initialize tesseract, text recognition is NOT avaiable.\n" << std::endl;
+	    	throw std::runtime_error("OCR Engine not avaiable");
+		}
+	    api->SetImage((unsigned char*)bw.data, bw.cols, bw.rows, bw.channels(), bw.step1());
+        api->SetRectangle(0, 0, bw.cols, bw.rows);
+	    const char* out = api->GetUTF8Text();
+	    std::string ret = out;
+	    delete []out;
+	    delete api;
+		return ret;
+	}
 }

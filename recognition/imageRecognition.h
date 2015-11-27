@@ -47,6 +47,8 @@ public:
 bool isImageBlackScreenOrZapScreen(cv::Mat &img,const cv::Vec3b &thresholdColor);
 objMatch matchTemplateSameScale(cv::Mat &img, cv::Mat &templ);
 
+std::string getTextFromImage(cv::Mat &img);
+
 } /* namespace RestServer */
 
 #endif /* IMAGERECOGNITION_H_ */

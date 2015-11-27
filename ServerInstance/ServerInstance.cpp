@@ -59,6 +59,9 @@ namespace RestServer {
 		myListeners.push_back(http_listener(myRoute7));
 		myListeners[7].support(methods::GET, wwwReports);
 
+		web::uri myRoute8("http://0.0.0.0:8080/text");
+		myListeners.push_back(http_listener(myRoute8));
+		myListeners[8].support(methods::GET, wwwGetText);
 	}
 
 	ServerInstance::~ServerInstance() {

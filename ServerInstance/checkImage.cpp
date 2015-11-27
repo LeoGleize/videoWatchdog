@@ -133,5 +133,22 @@ void wwwcheckimage(web::http::http_request request){
 }
 
 
+void wwwGetText(web::http::http_request request){
+		cv::Mat img = ServerInstance::cameraDeckLink->captureLastCvMatClone();
+		json::value reply;
+		std::string data;
+		cv::Mat inverted = img;
+		cv::Mat thImage;
+
+		try{
+			data = imageRecognition::getTextFromImage(img);
+		}catch(const std::exception &e){
+			reply["error"] = web::json::value::boolean("true");
+			reply["errorMessage"] = web::json::value::string(e.what());
+		}
+		reply["text"] = web::json::value::string(data);
+		request.reply(status_codes::OK, reply);
+}
+
 }
 
