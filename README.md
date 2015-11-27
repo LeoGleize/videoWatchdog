@@ -8,7 +8,6 @@ VideoWatchdog is a software developed for screen monitoring and video processing
   The project was written in C++ and is divided in the following components:
 
 * Main thread: implemented in ./IntensityAcquisition.cpp, this file is responsible for generating real time video output using the data acquired from IntensityPro and presenting it on desktop.
->>>>>>> 82a923d681c5ec351da76fa192323173761f1e1e
 
 * blackmagic/: This folder contains files used for communicating with IntensityPro drivers and acquiring video and audio, it also contains a SDK for developing software for Blackmagic products.
 
