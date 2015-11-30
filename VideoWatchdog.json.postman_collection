@@ -1,0 +1,311 @@
+{
+	"id": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+	"name": "VideoWatchdog",
+	"description": "",
+	"order": [
+		"b4703510-5e84-c351-2cce-ca4073d3ae4e",
+		"9df1fbb5-d139-c1bd-26c5-bbf33f14c64d",
+		"5aef7db5-9aca-e161-8843-1ccb06b7f48e",
+		"e62ea9da-d6ff-4a4c-efce-72f45ed1036e",
+		"3dcdd137-00a2-cb2b-0ea6-e739f485aec2",
+		"69e7c0c4-895a-d5b4-3121-5cf916825170",
+		"0256b3cd-50ba-bd63-88bf-302ce0877142",
+		"3077631c-4b5d-eb3a-03a7-7c7992ff05d0"
+	],
+	"folders": [],
+	"timestamp": 0,
+	"owner": "182021",
+	"remoteLink": null,
+	"public": false,
+	"requests": [
+		{
+			"id": "0256b3cd-50ba-bd63-88bf-302ce0877142",
+			"headers": "Content-Type: application/json\n",
+			"url": "127.0.0.1:8080/watchdog",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448890371918,
+			"name": "stop_watchdog",
+			"description": "",
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 200,
+						"name": "OK",
+						"detail": "Standard response for successful HTTP requests. The actual response will depend on the request method used. In a GET request, the response will contain an entity corresponding to the requested resource. In a POST request the response will contain an entity describing or containing the result of the action."
+					},
+					"time": 22,
+					"headers": [
+						{
+							"name": "Content-Length",
+							"key": "Content-Length",
+							"value": "5454",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"name": "Content-Type",
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "The mime type of this content"
+						}
+					],
+					"cookies": [],
+					"mime": "",
+					"text": "{\"error\":0,\"incidents\":[{\"duration_ms\":154100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_0_live_ia8.avi\",\"when\":\"26.11.2015 15:44:35\"},{\"duration_ms\":2300,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_1_black_vk2.avi\",\"when\":\"26.11.2015 15:47:08\"},{\"duration_ms\":16300,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_2_live_xhn.avi\",\"when\":\"26.11.2015 15:47:09\"},{\"duration_ms\":1700,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_3_black_2qv.avi\",\"when\":\"26.11.2015 15:47:24\"},{\"duration_ms\":1108100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_4_live_xto.avi\",\"when\":\"26.11.2015 15:47:24\"},{\"duration_ms\":2300,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_5_freeze_9zr.avi\",\"when\":\"26.11.2015 16:05:52\"},{\"duration_ms\":27700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_6_live_d27.avi\",\"when\":\"26.11.2015 16:05:53\"},{\"duration_ms\":2500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_7_freeze_btw.avi\",\"when\":\"26.11.2015 16:06:19\"},{\"duration_ms\":84100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_8_live_mwx.avi\",\"when\":\"26.11.2015 16:06:20\"},{\"duration_ms\":3100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_9_freeze_bf6.avi\",\"when\":\"26.11.2015 16:07:43\"},{\"duration_ms\":3500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_10_live_7od.avi\",\"when\":\"26.11.2015 16:07:45\"},{\"duration_ms\":2100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_11_freeze_eml.avi\",\"when\":\"26.11.2015 16:07:47\"},{\"duration_ms\":2900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_12_live_5te.avi\",\"when\":\"26.11.2015 16:07:48\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_13_freeze_71l.avi\",\"when\":\"26.11.2015 16:07:50\"},{\"duration_ms\":10700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_14_live_fno.avi\",\"when\":\"26.11.2015 16:07:50\"},{\"duration_ms\":2500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_15_freeze_3cm.avi\",\"when\":\"26.11.2015 16:07:59\"},{\"duration_ms\":81500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_16_live_0na.avi\",\"when\":\"26.11.2015 16:08:01\"},{\"duration_ms\":2100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_17_freeze_jow.avi\",\"when\":\"26.11.2015 16:09:21\"},{\"duration_ms\":50300,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_18_live_0dw.avi\",\"when\":\"26.11.2015 16:09:22\"},{\"duration_ms\":1900,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_19_freeze_p54.avi\",\"when\":\"26.11.2015 16:10:11\"},{\"duration_ms\":35900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_20_live_kr1.avi\",\"when\":\"26.11.2015 16:10:11\"},{\"duration_ms\":1500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_21_freeze_pld.avi\",\"when\":\"26.11.2015 16:10:46\"},{\"duration_ms\":2900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_22_live_v20.avi\",\"when\":\"26.11.2015 16:10:46\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_23_freeze_zm5.avi\",\"when\":\"26.11.2015 16:10:48\"},{\"duration_ms\":102900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_24_live_qlo.avi\",\"when\":\"26.11.2015 16:10:48\"},{\"duration_ms\":4100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_25_freeze_z82.avi\",\"when\":\"26.11.2015 16:12:30\"},{\"duration_ms\":29900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_26_live_g9u.avi\",\"when\":\"26.11.2015 16:12:32\"},{\"duration_ms\":1500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_27_freeze_oyq.avi\",\"when\":\"26.11.2015 16:13:01\"},{\"duration_ms\":55700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_28_live_umr.avi\",\"when\":\"26.11.2015 16:13:01\"},{\"duration_ms\":4700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_29_freeze_jj3.avi\",\"when\":\"26.11.2015 16:13:56\"},{\"duration_ms\":25500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_30_live_5ij.avi\",\"when\":\"26.11.2015 16:13:59\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_31_freeze_9sw.avi\",\"when\":\"26.11.2015 16:14:23\"},{\"duration_ms\":627900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_32_live_8mh.avi\",\"when\":\"26.11.2015 16:14:24\"},{\"duration_ms\":1900,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_33_black_ptp.avi\",\"when\":\"26.11.2015 16:24:51\"},{\"duration_ms\":556300,\"event\":\"Live signal\",\"isIncidentFinished\":false,\"videoName\":\"http://10.0.1.12/logvideo_34_live_oso.avi\",\"when\":\"26.11.2015 16:24:51\"}],\"message\":\"Watchdog stopped\",\"startTime\":\"26.11.2015 15:44:33\"}",
+					"language": "javascript",
+					"rawDataType": "text",
+					"state": {
+						"size": "normal"
+					},
+					"previewType": "html",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"isSample": true,
+					"scrollToResult": true,
+					"runTests": true,
+					"id": "f4210b56-a61e-9802-0a8f-cd44ce1f43ca",
+					"name": "ReplWatchdog.json",
+					"request": {
+						"url": "http://127.0.0.1:8080/watchdog",
+						"headers": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"name": "Content-Type",
+								"enabled": true
+							},
+							{
+								"key": "Cache-Control",
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Postman-Token",
+								"name": "Postman-Token",
+								"value": "995d56d5-b7b7-1285-85b1-dd268f1b1c71"
+							}
+						],
+						"data": "{\"stop\":true, \"tevent\":1500, \"eventType\":[\"BLACK\",\"FREEZE\",\"LIVE\"]}",
+						"method": "POST",
+						"dataMode": "raw"
+					}
+				}
+			],
+			"rawModeData": "{\"stop\":true}"
+		},
+		{
+			"id": "3077631c-4b5d-eb3a-03a7-7c7992ff05d0",
+			"headers": "",
+			"url": "127.0.0.1:8080/text",
+			"pathVariables": {},
+			"preRequestScript": "",
+			"method": "GET",
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"data": [],
+			"dataMode": "params",
+			"name": "GetTextOnScreen",
+			"description": "",
+			"descriptionFormat": "html",
+			"time": 1448890453702,
+			"version": 2,
+			"responses": [],
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {}
+		},
+		{
+			"id": "3dcdd137-00a2-cb2b-0ea6-e739f485aec2",
+			"headers": "Content-Type: application/json\n",
+			"url": "127.0.0.1:8080/watchdog",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448890383630,
+			"name": "start_watchdog",
+			"description": "",
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 200,
+						"name": "OK",
+						"detail": "Standard response for successful HTTP requests. The actual response will depend on the request method used. In a GET request, the response will contain an entity corresponding to the requested resource. In a POST request the response will contain an entity describing or containing the result of the action."
+					},
+					"time": 22,
+					"headers": [
+						{
+							"name": "Content-Length",
+							"key": "Content-Length",
+							"value": "5454",
+							"description": "The length of the response body in octets (8-bit bytes)"
+						},
+						{
+							"name": "Content-Type",
+							"key": "Content-Type",
+							"value": "application/json",
+							"description": "The mime type of this content"
+						}
+					],
+					"cookies": [],
+					"mime": "",
+					"text": "{\"error\":0,\"incidents\":[{\"duration_ms\":154100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_0_live_ia8.avi\",\"when\":\"26.11.2015 15:44:35\"},{\"duration_ms\":2300,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_1_black_vk2.avi\",\"when\":\"26.11.2015 15:47:08\"},{\"duration_ms\":16300,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_2_live_xhn.avi\",\"when\":\"26.11.2015 15:47:09\"},{\"duration_ms\":1700,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_3_black_2qv.avi\",\"when\":\"26.11.2015 15:47:24\"},{\"duration_ms\":1108100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_4_live_xto.avi\",\"when\":\"26.11.2015 15:47:24\"},{\"duration_ms\":2300,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_5_freeze_9zr.avi\",\"when\":\"26.11.2015 16:05:52\"},{\"duration_ms\":27700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_6_live_d27.avi\",\"when\":\"26.11.2015 16:05:53\"},{\"duration_ms\":2500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_7_freeze_btw.avi\",\"when\":\"26.11.2015 16:06:19\"},{\"duration_ms\":84100,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_8_live_mwx.avi\",\"when\":\"26.11.2015 16:06:20\"},{\"duration_ms\":3100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_9_freeze_bf6.avi\",\"when\":\"26.11.2015 16:07:43\"},{\"duration_ms\":3500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_10_live_7od.avi\",\"when\":\"26.11.2015 16:07:45\"},{\"duration_ms\":2100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_11_freeze_eml.avi\",\"when\":\"26.11.2015 16:07:47\"},{\"duration_ms\":2900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_12_live_5te.avi\",\"when\":\"26.11.2015 16:07:48\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_13_freeze_71l.avi\",\"when\":\"26.11.2015 16:07:50\"},{\"duration_ms\":10700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_14_live_fno.avi\",\"when\":\"26.11.2015 16:07:50\"},{\"duration_ms\":2500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_15_freeze_3cm.avi\",\"when\":\"26.11.2015 16:07:59\"},{\"duration_ms\":81500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_16_live_0na.avi\",\"when\":\"26.11.2015 16:08:01\"},{\"duration_ms\":2100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_17_freeze_jow.avi\",\"when\":\"26.11.2015 16:09:21\"},{\"duration_ms\":50300,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_18_live_0dw.avi\",\"when\":\"26.11.2015 16:09:22\"},{\"duration_ms\":1900,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_19_freeze_p54.avi\",\"when\":\"26.11.2015 16:10:11\"},{\"duration_ms\":35900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_20_live_kr1.avi\",\"when\":\"26.11.2015 16:10:11\"},{\"duration_ms\":1500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_21_freeze_pld.avi\",\"when\":\"26.11.2015 16:10:46\"},{\"duration_ms\":2900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_22_live_v20.avi\",\"when\":\"26.11.2015 16:10:46\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_23_freeze_zm5.avi\",\"when\":\"26.11.2015 16:10:48\"},{\"duration_ms\":102900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_24_live_qlo.avi\",\"when\":\"26.11.2015 16:10:48\"},{\"duration_ms\":4100,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_25_freeze_z82.avi\",\"when\":\"26.11.2015 16:12:30\"},{\"duration_ms\":29900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_26_live_g9u.avi\",\"when\":\"26.11.2015 16:12:32\"},{\"duration_ms\":1500,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_27_freeze_oyq.avi\",\"when\":\"26.11.2015 16:13:01\"},{\"duration_ms\":55700,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_28_live_umr.avi\",\"when\":\"26.11.2015 16:13:01\"},{\"duration_ms\":4700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_29_freeze_jj3.avi\",\"when\":\"26.11.2015 16:13:56\"},{\"duration_ms\":25500,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_30_live_5ij.avi\",\"when\":\"26.11.2015 16:13:59\"},{\"duration_ms\":1700,\"event\":\"Freeze\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_31_freeze_9sw.avi\",\"when\":\"26.11.2015 16:14:23\"},{\"duration_ms\":627900,\"event\":\"Live signal\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_32_live_8mh.avi\",\"when\":\"26.11.2015 16:14:24\"},{\"duration_ms\":1900,\"event\":\"Black Screen\",\"isIncidentFinished\":true,\"videoName\":\"http://10.0.1.12/logvideo_33_black_ptp.avi\",\"when\":\"26.11.2015 16:24:51\"},{\"duration_ms\":556300,\"event\":\"Live signal\",\"isIncidentFinished\":false,\"videoName\":\"http://10.0.1.12/logvideo_34_live_oso.avi\",\"when\":\"26.11.2015 16:24:51\"}],\"message\":\"Watchdog stopped\",\"startTime\":\"26.11.2015 15:44:33\"}",
+					"language": "javascript",
+					"rawDataType": "text",
+					"state": {
+						"size": "normal"
+					},
+					"previewType": "html",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"isSample": true,
+					"scrollToResult": true,
+					"runTests": true,
+					"id": "9cefc8e8-eedc-01cd-15cd-6c956c05e605",
+					"name": "ReplWatchdog.json",
+					"request": {
+						"url": "http://127.0.0.1:8080/watchdog",
+						"headers": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"name": "Content-Type",
+								"enabled": true
+							},
+							{
+								"key": "Cache-Control",
+								"name": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Postman-Token",
+								"name": "Postman-Token",
+								"value": "995d56d5-b7b7-1285-85b1-dd268f1b1c71"
+							}
+						],
+						"data": "{\"stop\":true, \"tevent\":1500, \"eventType\":[\"BLACK\",\"FREEZE\",\"LIVE\"]}",
+						"method": "POST",
+						"dataMode": "raw"
+					}
+				}
+			],
+			"rawModeData": "{\"start\":true, \"tevent\":2000, \"eventType\":[\"BLACK\",\"FREEZE\",\"LIVE\"]}"
+		},
+		{
+			"folder": null,
+			"id": "5aef7db5-9aca-e161-8843-1ccb06b7f48e",
+			"name": "GetEvent",
+			"dataMode": "raw",
+			"data": [],
+			"descriptionFormat": "html",
+			"description": "",
+			"headers": "Content-Type: application/json\n",
+			"method": "POST",
+			"pathVariables": {},
+			"url": "10.0.1.12:8080/getScreenEvent",
+			"preRequestScript": "",
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"rawModeData": "{ \n  \"eventType\": [\"LIVE\", \"FREEZE\", \"BLACK\"], \n  \"timeAnalysis\":600000, \n  \"timeEvent\":5000,\n  \"count\":true\n}"
+		},
+		{
+			"folder": null,
+			"id": "69e7c0c4-895a-d5b4-3121-5cf916825170",
+			"name": "watchReport",
+			"dataMode": "raw",
+			"data": [],
+			"rawModeData": "",
+			"descriptionFormat": "html",
+			"description": "",
+			"headers": "",
+			"method": "GET",
+			"pathVariables": {},
+			"url": "127.0.0.1:8080/report",
+			"preRequestScript": "",
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9"
+		},
+		{
+			"folder": null,
+			"id": "9df1fbb5-d139-c1bd-26c5-bbf33f14c64d",
+			"name": "GetImage",
+			"dataMode": "params",
+			"data": [],
+			"rawModeData": null,
+			"descriptionFormat": "html",
+			"description": "",
+			"headers": "",
+			"method": "GET",
+			"pathVariables": {},
+			"url": "10.0.1.12:8080/image",
+			"preRequestScript": "",
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9"
+		},
+		{
+			"id": "b4703510-5e84-c351-2cce-ca4073d3ae4e",
+			"headers": "Content-Type: application/json\n",
+			"url": "10.0.1.12:8080/status",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1448890484463,
+			"name": "GetStatus",
+			"description": "",
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"rawModeData": "{\"timeAnalysis\":2000}"
+		},
+		{
+			"folder": null,
+			"id": "e62ea9da-d6ff-4a4c-efce-72f45ed1036e",
+			"name": "CheckForImage",
+			"dataMode": "raw",
+			"data": [],
+			"descriptionFormat": "html",
+			"description": "",
+			"headers": "Content-Type: application/json\n",
+			"method": "POST",
+			"pathVariables": {},
+			"url": "127.0.0.1:8080/checkForImage",
+			"preRequestScript": "",
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"collectionId": "83c2d61d-12b5-c2ae-3fe9-61ad57eb23d9",
+			"rawModeData": "{\"imageURL\":\"http://10.0.1.12/info.png\", \"returnImage\":true}"
+		}
+	]
+}
