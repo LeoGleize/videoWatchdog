@@ -153,6 +153,34 @@ bool hdmiWatchdog::isWatcherRunning(){
 	return v;
 }
 
+void hdmiWatchdog::saveLogsToFile(std::string basepath){
+	//save copy of JSON events to log file
+	web::json::value log;
+	web::json::value incidents;
+
+	for(unsigned int i = 0; i < eventList.size(); i++){
+		web::json::value objTest;
+		objTest = incidentToJSON(eventList[i]);
+		incidents[i] = objTest;
+	}
+
+	char buffer[32];
+	struct tm * timeinfo;
+	std::time_t tstart = getTimeStart();
+	timeinfo = localtime(&(tstart));
+	std::strftime(buffer, 32, "%d.%m.%Y %H:%M:%S", timeinfo);
+	log["startTime"] = web::json::value::string(buffer);
+	log["incidents"] = incidents;
+	std::strftime(buffer, 32, "%d_%m_%Y_%H_%M_%S", timeinfo);
+	std::ofstream oFile;
+	std::string fname = basepath + "log_" + buffer + ".json";
+	oFile.open(fname.c_str(), std::ofstream::out);
+	oFile << log.serialize();
+	oFile.flush();
+	oFile.close();
+}
+
+
 /*
  * Stop watchdog thread
  */
@@ -165,6 +193,7 @@ bool hdmiWatchdog::stop(){
 		delete threadWatcher;
 		threadWatcher = NULL;
 		this->mutexLaunch.unlock();
+		saveLogsToFile(config["watchdog"]["logpath"].as_string());
 		return true;
 	}
 	this->mutexLaunch.unlock();
@@ -435,7 +464,7 @@ void hdmiWatchdog::launchWatchdog(){
 		 * between each call minus the amount of time the loop took to be executed.
 		 *
 		 * THIS IS NOT EXACT but is close enough for our application
-		 * A better implementation of this can be found on boost::Asio
+		 * A better implementation of this can be done using boost::Asio timers
 		 */
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 + culmulativeDelay < 1000 * dt_interFramems){
 			usleep(	1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000 - culmulativeDelay));

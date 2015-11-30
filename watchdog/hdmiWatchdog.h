@@ -75,6 +75,7 @@ private:
 	bool checkForAudio(short *audioData, unsigned int nElements);
 	void getImgTextSaveToEvent(cv::Mat m, int evtIndex);
 	void writeFrame(cv::Mat &mat);
+	void saveLogsToFile(std::string basepath);
 	hdmiWatchdog(); //constructor is PRIVATE
 	std::string getRandomName(int size);
 	std::string createVideoAndDumpFiles(std::deque<watchDogData> &toDump, unsigned int eventID, std::string suffix);
