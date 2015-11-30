@@ -175,6 +175,9 @@ void hdmiWatchdog::saveLogsToFile(std::string basepath){
 	std::ofstream oFile;
 	std::string fname = basepath + "log_" + buffer + ".json";
 	oFile.open(fname.c_str(), std::ofstream::out);
+	if(oFile.is_open() == false){
+		std::cerr<<"Error: Watchdog could not open log file "<<fname<<std::endl;
+	}
 	oFile << log.serialize();
 	oFile.flush();
 	oFile.close();

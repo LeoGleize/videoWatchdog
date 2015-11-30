@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 
 		}
 
-		if (cvWaitKey(15) >= 0)
+		if (cvWaitKey(10) >= 0)
 			continue;
 	}
 	myServer.stop();
