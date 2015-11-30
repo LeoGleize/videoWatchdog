@@ -120,9 +120,6 @@ void wwwdetectEvent(http_request request) {
 __screenState getState(int dt_ms) {
 	__screenState reply;
 	int dt_interFramems = 100; //one shot per 100ms = we'll try to keep 10fps on average
-
-	//threshold for a 1080p is 5000 this is done so there won't be
-	//different results for different resolutions
 	int nReadings = dt_ms / dt_interFramems;
 
 	cv::Mat imgcmp, subResult;
@@ -137,25 +134,46 @@ __screenState getState(int dt_ms) {
 			reply.oState = S_NO_VIDEO;
 		return reply;
 	}
+	bool hasAudio = false;
 
 	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 
-		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMatClone();
+		IplImage *pToFree;
+		void *ptrAudioData;
+		int nBytes;
+		imgcmp = ServerInstance::cameraDeckLink->captureLastCvMatAndAudio(&pToFree, &ptrAudioData, &nBytes);
+		short *audioData = (short*)ptrAudioData;
+		short max = 0;
+		for(unsigned int i = 0; i < nBytes / sizeof(short); i++)
+			if(std::abs(audioData[i]) > soundThreshold)
+				hasAudio = true;
+		free(ptrAudioData);
+
 		cv::subtract(imgcmp, fimg, subResult);
 		diff = cv::norm(subResult);
 		maxDiff = (diff > maxDiff) ? diff : maxDiff;
+
+
+		cvRelease((void **) &pToFree);
 		gettimeofday(&t1, NULL);
 		//fix time: to keep an average of one frame per 50ms
 		if (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000	< 1000 * dt_interFramems)
 			usleep(1000 * dt_interFramems - (t1.tv_usec - t0.tv_usec + (t1.tv_sec - t0.tv_sec) * 1000000));
+
 	}
 
 	if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold
 			&& imageRecognition::isImageBlackScreenOrZapScreen(fimg, blackThreshold)) {
-		reply.oState = S_BLACK_SCREEN;
+		if(hasAudio)
+			reply.oState = S_BLACK_SCREEN;
+		else
+			reply.oState = S_BLACK_SCREEN_NO_AUDIO;
 	} else if (maxDiff / (fimg.rows * fimg.cols) < freezeThreshold) {
-		reply.oState = S_FREEZE_SIGNAL;
+		if(hasAudio)
+			reply.oState = S_FREEZE_SIGNAL;
+		else
+			reply.oState = S_FREEZE_SIGNAL_NO_AUDIO;
 	} else {
 		reply.oState = S_LIVE_SIGNAL;
 	}
