@@ -17,4 +17,4 @@ make
 sudo make install
 sudo ldconfig
 echo "All dependencies have been installed"
-echo "You can now build R7IntensityPro running 'make'"
+echo "You can now build VideoWatchdog running 'make'"
