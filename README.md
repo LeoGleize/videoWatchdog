@@ -79,3 +79,4 @@ You can do a get request on /report, both this request and a command to stop the
 ### Wiki
 
 You can find more information about the project at: [videoWatchdog Wiki](https://github.com/canalplus/videoWatchdog/wiki/Installing-videoWatchdog)
+
