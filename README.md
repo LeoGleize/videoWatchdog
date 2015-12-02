@@ -1,6 +1,6 @@
 #VideoWatchdog
 
-VideoWatchdog is a software developed for screen monitoring and video processing using an IntensityPro acquisition card. The main idea is to connect a STB as video input and analyze its data, creating events for state changes and implementing other forms of data acquisition to automate the process of testing.
+VideoWatchdog is a software developed for screen monitoring and video processing using an IntensityPro acquisition card. The main idea is to connect a STB as video input and analyze its data, creating events for state changes and implementing other forms of data acquisition to automate the testing process.
 
 <img src="http://i.imgur.com/qGmjY5V.png" width="500px"></img>
 
