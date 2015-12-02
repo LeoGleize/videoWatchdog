@@ -205,6 +205,8 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 
 	unsigned int nReadings = timeAnalysis / dt_interFramems;
 	std::deque<cv::Mat> matList;
+	std::deque<IplImage *> toFreeList;
+	std::deque<bool> vmatHasAudio;
 	timeval t0, t1, tStart;
 
 	gettimeofday(&tStart, NULL);
@@ -212,7 +214,20 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 	for (unsigned int i = 0; i < nReadings; i++) {
 		gettimeofday(&t0, NULL);
 		try{
-			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMatClone());
+			void *ptrToAudio;
+			int nBytes;
+			IplImage* imgIpl;
+			matList.push_back(ServerInstance::cameraDeckLink->captureLastCvMatAndAudio(&imgIpl,&ptrToAudio,&nBytes));
+			toFreeList.push_back(imgIpl);
+			int nSamples = nBytes / sizeof(short);
+			short * audioData = (short *) ptrToAudio;
+			bool hasAudio = false;
+			for(int j = 0; j < nSamples; j++){
+				if(audioData[j] > soundThreshold)
+					hasAudio = true;
+			}
+			vmatHasAudio.push_back(hasAudio);
+			free(ptrToAudio);
 		}catch(const CardException &e){
 			usleep(	1000 * dt_interFramems);
 			std::cout<<"Caught exception on detectState():"<<e.what()<<std::endl<<std::flush;
@@ -220,12 +235,16 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 		}
 		if (matList.size() > nFrames) {
 			matList.pop_front();
+			cvRelease((void **) &(toFreeList.front()));
+			toFreeList.pop_front();
+			vmatHasAudio.pop_front();
 		}
 		//deque is full therefore we can process
 		if (matList.size() == nFrames) {
 			double maxDiff = 0;
 			unsigned int npixel = matList[0].cols * matList[0].rows;
 			cv::Mat subtractionResult;
+			bool framesHaveAudio = false;
 			for (unsigned int i = 1; i < matList.size(); i++) {
 				double n1,n2;
 				cv::subtract(matList[0], matList[i], subtractionResult);
@@ -234,6 +253,8 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 				n2 = cv::norm(subtractionResult);
 				maxDiff = (n1 > maxDiff) ? n1 : maxDiff;
 				maxDiff = (n2 > maxDiff) ? n2 : maxDiff;
+				if(vmatHasAudio[i])
+					framesHaveAudio = true;
 			}
 			maxDiff = maxDiff / npixel;
 
@@ -251,22 +272,28 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 			} else if (searchBlack
 					&& maxDiff < freezeThreshold
 			        && imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
-				if(lastCapturedState == S_BLACK_SCREEN){
+				if(lastCapturedState == S_BLACK_SCREEN || lastCapturedState == S_BLACK_SCREEN_NO_AUDIO){
 					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
 				}else{
 					screenDetection.timestamps.push_back(std::time(NULL));
-					screenDetection.found.push_back(S_BLACK_SCREEN);
+					if(framesHaveAudio)
+						screenDetection.found.push_back(S_BLACK_SCREEN);
+					else
+						screenDetection.found.push_back(S_BLACK_SCREEN_NO_AUDIO);
 					screenDetection.tlast.push_back(timeEvent);
 				}
 				lastCapturedState = S_BLACK_SCREEN;
 			} else if (searchFreeze
 					&& maxDiff < freezeThreshold
 					&& !imageRecognition::isImageBlackScreenOrZapScreen(matList[0],blackThreshold)) {
-				if(lastCapturedState == S_FREEZE_SIGNAL){
+				if(lastCapturedState == S_FREEZE_SIGNAL || lastCapturedState == S_FREEZE_SIGNAL_NO_AUDIO){
 					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
 				}else{
 					screenDetection.timestamps.push_back(std::time(NULL));
-					screenDetection.found.push_back(S_FREEZE_SIGNAL);
+					if(framesHaveAudio)
+						screenDetection.found.push_back(S_FREEZE_SIGNAL);
+					else
+						screenDetection.found.push_back(S_FREEZE_SIGNAL_NO_AUDIO);
 					screenDetection.tlast.push_back(timeEvent);
 				}
 				lastCapturedState = S_FREEZE_SIGNAL;
