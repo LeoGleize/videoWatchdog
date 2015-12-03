@@ -6,7 +6,7 @@
 	<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script type="text/javascript" src="http://mbostock.github.com/d3/d3.v2.js"></script>
-	
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 	<script src="./view.js"></script>
 	<link rel="stylesheet" href="./style.css">
 	
@@ -23,57 +23,59 @@
 
 	<div id="showEvt">
 
-		<table>
-		<tr>
-			<td>
-				<a class="formShow">Load log file:</a>
-			</td>
-			<td>
-				<input type="file" class="file" name="logFile" id="logFile" onchange="callLoadFile()"/>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<a class="formShow">When:</a>
-			</td>
-			<td>
-				<a id="fwhen" class="formData"></a>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<a class="formShow">Type:</a>
-			</td>
-			<td>
-				<a id="ftype" class="formData"></a>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<a class="formShow">Time(ms):</a>
-			</td>
-			<td>
-				<a id="ftime" class="formData"></a>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<a class="formShow">Video:</a>
-			</td>
-			<td>
-				<a id="fLink" class="formData"></a></br>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<a class="formShow">Detected text:</a>
-			</td>
-			<td>
-				<a id="ftext" class="formData"></a></br>
-			</td>
-		</tr>
-		</table>
-		<br/><br/>
+		<div class="rightCol">
+			<table>
+				<tr>
+					<td class="formShow">
+						Load log file:
+					</td>
+					<td>
+						<input type="file" class="file" name="logFile" id="logFile" onchange="callLoadFile()"/>
+					</td>
+				</tr>
+				<tr>
+					<td class="formShow">
+						When:
+					</td>
+					<td class="formData" id="fwhen">
+						
+					</td>
+				</tr>
+				<tr>
+					<td class="formShow">
+						Type:
+					</td>
+					<td id="ftype" class="formData">
+
+					</td>
+				</tr>
+				<tr>
+					<td class="formShow">
+						Time(ms):
+					</td>
+					<td id="ftime" class="formData">
+						
+					</td>
+				</tr>
+				<tr>
+					<td class="formShow">
+						Video:
+					</td>
+					<td>
+						<a id="fLink" class="formData"></a></br>
+					</td>
+				</tr>
+				<tr>
+					<td class="formShow">
+						Detected text:
+					</td>
+					<td id="ftext" class="formData">
+						
+					</td>
+				</tr>
+			</table>
+			<br/><br/>
+		</div>
 	</div>
 
 </body>
