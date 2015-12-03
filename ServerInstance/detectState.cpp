@@ -266,7 +266,10 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 				}else{
 					screenDetection.timestamps.push_back(std::time(NULL));
 					screenDetection.found.push_back(S_LIVE_SIGNAL);
-					screenDetection.tlast.push_back(timeEvent);
+					if(lastCapturedState == S_NOT_FOUND)
+						screenDetection.tlast.push_back(timeEvent);
+					else
+						screenDetection.tlast.push_back(dt_interFramems);
 				}
 				lastCapturedState = S_LIVE_SIGNAL;
 			} else if (searchBlack
@@ -280,7 +283,11 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 						screenDetection.found.push_back(S_BLACK_SCREEN);
 					else
 						screenDetection.found.push_back(S_BLACK_SCREEN_NO_AUDIO);
-					screenDetection.tlast.push_back(timeEvent);
+
+					if(lastCapturedState == S_NOT_FOUND)
+						screenDetection.tlast.push_back(timeEvent);
+					else
+						screenDetection.tlast.push_back(dt_interFramems);
 				}
 				lastCapturedState = S_BLACK_SCREEN;
 			} else if (searchFreeze
@@ -290,11 +297,16 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 					screenDetection.tlast[screenDetection.tlast.size() - 1] += dt_interFramems;
 				}else{
 					screenDetection.timestamps.push_back(std::time(NULL));
+
 					if(framesHaveAudio)
 						screenDetection.found.push_back(S_FREEZE_SIGNAL);
 					else
 						screenDetection.found.push_back(S_FREEZE_SIGNAL_NO_AUDIO);
-					screenDetection.tlast.push_back(timeEvent);
+
+					if(lastCapturedState == S_NOT_FOUND)
+						screenDetection.tlast.push_back(timeEvent);
+					else
+						screenDetection.tlast.push_back(dt_interFramems);
 				}
 				lastCapturedState = S_FREEZE_SIGNAL;
 			}else{
