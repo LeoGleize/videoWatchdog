@@ -4,6 +4,7 @@ VideoWatchdog is a software developed for screen monitoring and video processing
 
 <img src="http://i.imgur.com/qGmjY5V.png" width="500px"></img>
 
+<img src="http://i.imgur.com/AtlBfWN.png"/>
 
   The project was written in C++ and is divided in the following components:
 
