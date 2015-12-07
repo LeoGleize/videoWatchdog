@@ -40,6 +40,8 @@ The server exposes an REST API on page 8080 with the following routes:
 | /checkForImage | Check if an image is being shown in the screen | POST | {"imageURL":"http://image.to.search/img.png","returnImage":true}  |
 | /text      | Executes an OCR text recognition on the current STB output and returns the text being shown |   GET |  None |
 
+The complete list of routes can be found in the Wiki: [REST Server](https://github.com/canalplus/videoWatchdog/wiki/REST-Server)
+
 Two other routes were created to control the watchdog, the first one is /watchdog that accepts two arguments via POST.
 
 To start looking for events of at least 1.5s and of types: BLACK, FREEZE, LIVE and FREEZE_NO_AUDIO:
