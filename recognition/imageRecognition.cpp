@@ -9,6 +9,7 @@ x * imageRecognition.cpp
 #include <iostream>
 //#include <opencv2/features2d.hpp>
 #include <tesseract/baseapi.h>
+#include "../ServerInstance/ServerInstance.h"
 
 namespace imageRecognition {
 
@@ -76,4 +77,17 @@ namespace imageRecognition {
 	    delete api;
 		return ret;
 	}
+
+	bool bufferHasAudio(short *audioData, unsigned int nElements){
+		short max = 0;
+		for(unsigned int i = 0; i < nElements; i++){
+		if (abs(audioData[i]) > RestServer::soundThreshold){
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+
 }

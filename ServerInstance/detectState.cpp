@@ -23,7 +23,6 @@
 #include <boost/asio.hpp>
 #include "tcpClient/tcpClient.h"
 
-using boost::asio::ip::tcp;
 using namespace web;
 using namespace web::http;
 using namespace web::http::experimental::listener;
@@ -289,6 +288,77 @@ long detectStartAndEndOfBlackScreen(long maxTimeSearch){
 		time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
 
 	}
+	if(time >= maxTimeSearch)
+		return -1;
+	return time;
+}
+
+long detectWakeUP(long maxTimeSearch){
+	long time = 0;
+	timeval t0, t1;
+	gettimeofday(&t0, NULL);
+	sleep(10);
+	bool appeared = false;
+	std::deque<cv::Mat> matList;
+	std::deque<IplImage *> imgPointersList;
+	std::deque<bool> hasAudioList;
+
+	while(time < maxTimeSearch){
+		try{
+			IplImage *imgDt;
+			int nBytes;
+			int nSamples;
+			void *audioBuffer;
+			cv::Mat m = ServerInstance::cameraDeckLink->captureLastCvMatAndAudio(&imgDt,&audioBuffer,&nBytes);
+			hasAudioList.push_back(imageRecognition::bufferHasAudio((short int *) audioBuffer, nBytes / sizeof(short)));
+			free(audioBuffer); //free audio
+			matList.push_back(m);
+			imgPointersList.push_back(imgDt);
+			if(imgPointersList.size() > 10){
+				hasAudioList.pop_front();
+				matList.pop_front();
+				IplImage *img_ptr = imgPointersList.front();
+				cvRelease((void **) &img_ptr);
+				imgPointersList.pop_front();
+
+				bool allFramesHaveAudio = true;
+				for(int i = 0; i < hasAudioList.size(); i++){
+					allFramesHaveAudio = allFramesHaveAudio && hasAudioList[i];
+				}
+				if(allFramesHaveAudio){
+					//check if frames are different
+					cv::Mat front = matList.front();
+					cv::Mat back = matList.back();
+					cv::Mat subtractionResult;
+					cv::subtract(front, back, subtractionResult);
+					double n1 = cv::norm(subtractionResult);
+					cv::subtract(back, front, subtractionResult);
+					double n2 = cv::norm(subtractionResult);
+					n1 = (n1 > n2)?n1:n2;
+					if(n1 / (back.rows * back.cols) < freezeThreshold){
+						gettimeofday(&t1, NULL);
+						time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+						break;
+					}
+				}
+			}
+		}catch(const std::exception &e){
+			//ignore exceptions, there'll be plenty of undetected frames on a reboot
+		}
+		usleep(100000);
+		//on end
+		gettimeofday(&t1, NULL);
+		time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+
+	}
+	//clean buffers!
+	while(imgPointersList.size() > 0){
+		IplImage *img_ptr;
+		img_ptr = imgPointersList.front();
+		cvRelease((void **) &img_ptr);
+		imgPointersList.pop_front();
+	}
+
 	if(time >= maxTimeSearch)
 		return -1;
 	return time;

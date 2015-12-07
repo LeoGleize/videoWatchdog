@@ -66,6 +66,10 @@ namespace RestServer {
 		web::uri myRoute9("http://0.0.0.0:8080/zap");
 		myListeners.push_back(http_listener(myRoute9));
 		myListeners[9].support(methods::POST, wwwGetZapTime);
+
+		web::uri myRoute10("http://0.0.0.0:8080/wakeup");
+		myListeners.push_back(http_listener(myRoute10));
+		myListeners[10].support(methods::POST, wwwGetWakeupTime);
 	}
 
 	ServerInstance::~ServerInstance() {
