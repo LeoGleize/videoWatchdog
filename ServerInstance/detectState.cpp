@@ -9,13 +9,21 @@
 #include "../recognition/imageRecognition.h"
 #include <cpprest/http_listener.h>
 #include <cpprest/json.h>
+#include <cpprest/http_client.h>
+#include <cpprest/astreambuf.h>
+#include <cpprest/containerstream.h>
 #include <iostream>
 #include <unistd.h>
 #include <sys/time.h>
 #include <queue>
-#include <algorithm>
+#include <pplx/pplxtasks.h>
+#include <cpprest/json.h>
+#include <system_error>
 #include <ctime>
+#include <boost/asio.hpp>
+#include "tcpClient/tcpClient.h"
 
+using boost::asio::ip::tcp;
 using namespace web;
 using namespace web::http;
 using namespace web::http::experimental::listener;
@@ -114,6 +122,74 @@ void wwwdetectEvent(http_request request) {
 }
 
 /*
+ *  Forces a STB to execute a ZAP to any channel and
+ *  measures the time it took to execute it.
+ *
+ */
+void wwwGetZapTime(web::http::http_request request){
+	//check if image field is valid
+	json::value params = request.extract_json().get();
+	json::value reply;
+
+	if(params.has_field("stb_ip") && params["stb_ip"].is_string() &&
+	   params.has_field("channel") && params["channel"].is_string()){
+		json::value zapRequest, paramsSub;
+		zapRequest["action"] = web::json::value::string("zap");
+		int chvalue = std::stoi (params["channel"].as_string());
+
+		int nDigits;
+		if(chvalue < 10){
+			nDigits = 1;
+		}else if(chvalue < 100){
+			nDigits = 2;
+		}else {
+			nDigits = 3;
+		}
+
+		try{
+			paramsSub["channelNumber"] = web::json::value::number( chvalue);
+			zapRequest["params"] = paramsSub;
+			std::string stbAddr = params["stb_ip"].as_string();
+			std::string bufferData = zapRequest.serialize();
+
+			//boost connect to server and do request
+			websocket::tcpClient tClient;
+			if(!tClient.conn(stbAddr,8080)){
+				throw std::runtime_error("Error could not connect to "+stbAddr + ":8080");
+			}
+			tClient.send_data("POST /message HTTP/1.1\r\n");
+			tClient.send_data("Content-Type: application/json\r\n");
+			tClient.send_data("Content-Length: " + std::to_string(44 + nDigits) + "\r\n");
+			tClient.send_data("Accept: */*\r\n");
+			tClient.send_data("Content-Type: application/json\r\n\r\n");
+			tClient.send_data(bufferData);
+			long time = detectStartAndEndOfBlackScreen(15000);
+			tClient.close();
+			if(time < 0){
+				reply["error"] = 1;
+				std::string message = "Zap failed, not detected in 15 seconds";
+				reply["message"] = web::json::value::string(message);
+			}else{
+				reply["done"] = 1;
+				reply["ms"] = time;
+			}
+
+		}catch(const std::exception &e){
+			reply["error"] = 1;
+			reply["message"] = web::json::value::string(e.what());
+		}
+	}else{
+		reply["error"] = 1;
+		std::string message = "This request needs the following parameters: 'stb_ip' address " \
+						      "of the set top box in test, " \
+						      " 'channelNumber':number as string with the channel that we will zap to";
+		reply["message"] = web::json::value::string(message);
+	}
+	request.reply(status_codes::OK, reply);
+}
+
+
+/*
  *  Return the state of the screen after an dt_ms long analysis
  * 	during this analysis a frame will be captured every dt_interFramems
  */
@@ -181,6 +257,43 @@ __screenState getState(int dt_ms) {
 	reply.maxNormppixel = cv::norm(fimg) / (fimg.rows * fimg.cols);
 	return reply;
 }
+
+/*
+ * Detects the start and end of an black screen can be used to measure zapping time
+ * by doing a zap via RCU and measuring how long it takes for an black screen to
+ * show and disappear.
+ */
+
+long detectStartAndEndOfBlackScreen(long maxTimeSearch){
+	long time = 0;
+	timeval t0, t1;
+	gettimeofday(&t0, NULL);
+	bool appeared = false;
+	while(time < maxTimeSearch){
+		IplImage *imgDt;
+		cv::Mat m = ServerInstance::cameraDeckLink->captureLastCvMat(&imgDt);
+		if(imageRecognition::isImageBlackScreenOrZapScreen(m,blackThreshold)){
+			if(appeared == false)
+				appeared = true;
+		}else{
+			if(appeared == true){
+				gettimeofday(&t1, NULL);
+				time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+				break;
+			}
+
+		}
+		cvRelease((void **) &imgDt);
+
+		gettimeofday(&t1, NULL);
+		time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+
+	}
+	if(time >= maxTimeSearch)
+		return -1;
+	return time;
+}
+
 
 /*
  * Monitors state changes on screen, this has a limit of around 20 seconds,
