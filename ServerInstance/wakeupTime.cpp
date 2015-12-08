@@ -48,13 +48,14 @@ namespace RestServer{
 					tClient.send_data("Content-Type: application/json\r\n\r\n");
 					tClient.send_data("M0:O" + portNumber + "=On");
 					//start counting!
-					long t = detectWakeUP(1000*60*6); //max wait is 6 minutes!
+					sleep(10); //wait for a bit before counting
+					long t = detectWakeUP(1000*60*10); //max wait is 6 minutes!
 					if(t < 0){
 						reply["error"] = 1;
-						reply["message"] = web::json::value::string("Boot was not detected after 6 minutes");
+						reply["message"] = web::json::value::string("Boot was not detected after 10 minutes");
 					}else{
 						reply["done"] = 1;
-						reply["ms"] = web::json::value::number(t);
+						reply["ms"] = web::json::value::number(t + 10000);
 					}
 				}catch(const std::exception &e){
 					reply["error"] = 1;
@@ -69,6 +70,20 @@ namespace RestServer{
 			reply["message"] = web::json::value::string("This route requires two parameters: 'ip' the ip" \
 							  " address of the ePowerSwitch and 'nplug' the plug to which the STB is connected");
 
+		}
+		request.reply(status_codes::OK, reply);
+	}
+
+	void wwwGetTimeToLive(web::http::http_request request){
+//		json::value params = request.extract_json().get();
+		json::value reply;	//start counting!
+		long t = detectWakeUP(1000*60*10); //max wait is 6 minutes!
+		if(t < 0){
+			reply["error"] = 1;
+			reply["message"] = web::json::value::string("Boot was not detected after 10 minutes");
+		}else{
+			reply["done"] = 1;
+			reply["ms"] = web::json::value::number(t);
 		}
 		request.reply(status_codes::OK, reply);
 	}

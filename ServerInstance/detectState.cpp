@@ -297,7 +297,7 @@ long detectWakeUP(long maxTimeSearch){
 	long time = 0;
 	timeval t0, t1;
 	gettimeofday(&t0, NULL);
-	sleep(10);
+
 	bool appeared = false;
 	std::deque<__screenState> detectedStates;
 

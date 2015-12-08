@@ -70,6 +70,10 @@ namespace RestServer {
 		web::uri myRoute10("http://0.0.0.0:8080/wakeup");
 		myListeners.push_back(http_listener(myRoute10));
 		myListeners[10].support(methods::POST, wwwGetWakeupTime);
+
+		web::uri myRoute11("http://0.0.0.0:8080/timetolive");
+		myListeners.push_back(http_listener(myRoute11));
+		myListeners[11].support(methods::GET, wwwGetTimeToLive);
 	}
 
 	ServerInstance::~ServerInstance() {

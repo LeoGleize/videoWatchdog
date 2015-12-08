@@ -67,6 +67,7 @@ namespace RestServer {
 	void wwwGetText(web::http::http_request request);
 	void wwwGetZapTime(web::http::http_request request);
 	void wwwGetWakeupTime(web::http::http_request request);
+	void wwwGetTimeToLive(web::http::http_request request);
 	__screenState getState(int dt_ms);
 	__detectScreenState detectStateChange(std::list<outputState> &stateSearch, unsigned int timeAnalysis,unsigned int timeEvent,bool countOc);
 	long detectStartAndEndOfBlackScreen(long maxTimeSearch);
