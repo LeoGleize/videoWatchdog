@@ -299,64 +299,31 @@ long detectWakeUP(long maxTimeSearch){
 	gettimeofday(&t0, NULL);
 	sleep(10);
 	bool appeared = false;
-	std::deque<cv::Mat> matList;
-	std::deque<IplImage *> imgPointersList;
-	std::deque<bool> hasAudioList;
+	std::deque<__screenState> detectedStates;
 
 	while(time < maxTimeSearch){
 		try{
-			IplImage *imgDt;
-			int nBytes;
-			int nSamples;
-			void *audioBuffer;
-			cv::Mat m = ServerInstance::cameraDeckLink->captureLastCvMatAndAudio(&imgDt,&audioBuffer,&nBytes);
-			hasAudioList.push_back(imageRecognition::bufferHasAudio((short int *) audioBuffer, nBytes / sizeof(short)));
-			free(audioBuffer); //free audio
-			matList.push_back(m);
-			imgPointersList.push_back(imgDt);
-			if(imgPointersList.size() > 10){
-				hasAudioList.pop_front();
-				matList.pop_front();
-				IplImage *img_ptr = imgPointersList.front();
-				cvRelease((void **) &img_ptr);
-				imgPointersList.pop_front();
-
-				bool allFramesHaveAudio = true;
-				for(int i = 0; i < hasAudioList.size(); i++){
-					allFramesHaveAudio = allFramesHaveAudio && hasAudioList[i];
+			detectedStates.push_back(getState(1000));
+			if(detectedStates.size() > 10){
+				detectedStates.pop_front();
+				bool isLiveStream = true;
+				for(int i = 0; i < detectedStates.size(); i++){
+					if(detectedStates[i].oState != S_LIVE_SIGNAL)
+						isLiveStream = false;
 				}
-				if(allFramesHaveAudio){
-					//check if frames are different
-					cv::Mat front = matList.front();
-					cv::Mat back = matList.back();
-					cv::Mat subtractionResult;
-					cv::subtract(front, back, subtractionResult);
-					double n1 = cv::norm(subtractionResult);
-					cv::subtract(back, front, subtractionResult);
-					double n2 = cv::norm(subtractionResult);
-					n1 = (n1 > n2)?n1:n2;
-					if(n1 / (back.rows * back.cols) < freezeThreshold){
-						gettimeofday(&t1, NULL);
-						time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
-						break;
-					}
+				if(isLiveStream){
+					gettimeofday(&t1, NULL);
+					time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+					break;
 				}
 			}
 		}catch(const std::exception &e){
-			//ignore exceptions, there'll be plenty of undetected frames on a reboot
+			detectedStates.clear();
 		}
-		usleep(100000);
 		//on end
 		gettimeofday(&t1, NULL);
 		time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
 
-	}
-	//clean buffers!
-	while(imgPointersList.size() > 0){
-		IplImage *img_ptr;
-		img_ptr = imgPointersList.front();
-		cvRelease((void **) &img_ptr);
-		imgPointersList.pop_front();
 	}
 
 	if(time >= maxTimeSearch)
