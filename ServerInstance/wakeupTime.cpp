@@ -75,15 +75,28 @@ namespace RestServer{
 	}
 
 	void wwwGetTimeToLive(web::http::http_request request){
-//		json::value params = request.extract_json().get();
+
+		json::value params = request.extract_json().get();
 		json::value reply;	//start counting!
-		long t = detectWakeUP(1000*60*10); //max wait is 6 minutes!
-		if(t < 0){
-			reply["error"] = 1;
-			reply["message"] = web::json::value::string("Boot was not detected after 10 minutes");
+		if(params.has_field("tempo") && params["tempo"].is_string()){
+			try{
+				int delta = std::stoi(params["tempo"].as_string());
+				long t = detectWakeUP(1000*60*10); //max wait is 6 minutes!
+				if(t < 0){
+					reply["error"] = 1;
+					reply["message"] = web::json::value::string("Boot was not detected after 10 minutes");
+				}else{
+					reply["done"] = 1;
+					reply["ms"] = web::json::value::number(t + delta);
+				}
+			}catch(const std::exception &e){
+				reply["error"] = 1;
+				reply["message"] = web::json::value::string(e.what());
+			}
 		}else{
-			reply["done"] = 1;
-			reply["ms"] = web::json::value::number(t);
+			reply["error"] = 1;
+			std::string msg = "This route requires a variable 'tempo' with a delta that will be added to the mesure";
+			reply["message"] = web::json::value::string(msg);
 		}
 		request.reply(status_codes::OK, reply);
 	}

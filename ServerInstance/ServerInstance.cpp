@@ -73,7 +73,7 @@ namespace RestServer {
 
 		web::uri myRoute11("http://0.0.0.0:8080/timetolive");
 		myListeners.push_back(http_listener(myRoute11));
-		myListeners[11].support(methods::GET, wwwGetTimeToLive);
+		myListeners[11].support(methods::POST, wwwGetTimeToLive);
 	}
 
 	ServerInstance::~ServerInstance() {
