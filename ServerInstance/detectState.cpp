@@ -314,6 +314,7 @@ long detectWakeUP(long maxTimeSearch){
 				if(isLiveStream){
 					gettimeofday(&t1, NULL);
 					time = (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_usec-t0.tv_usec) / 1000;
+					time -= 1000*10;
 					break;
 				}
 			}
