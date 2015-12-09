@@ -94,9 +94,8 @@ void CameraDecklink::initializeCamera(IDeckLink *_deckLink) {
 					pixelFormat, bmdVideoInputFlagDefault, &result, NULL);
 
 			if (result == bmdDisplayModeNotSupported) {
-				fprintf(stderr,
-						"The display mode %s is not supported with the selected pixel format\n",
-						displayModeName);
+				fprintf(stderr,	"The display mode %s is not supported with the selected pixel format\n",
+					    displayModeName);
 				return;
 			}
 

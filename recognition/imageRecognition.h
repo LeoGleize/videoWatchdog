@@ -45,9 +45,22 @@ public:
  * true
  */
 bool isImageBlackScreenOrZapScreen(cv::Mat &img,const cv::Vec3b &thresholdColor);
+
+/**
+ * Given an image and a template this method searches for the template in the
+ * image and return an objMatch object with information of what was found
+ */
 objMatch matchTemplateSameScale(cv::Mat &img, cv::Mat &templ);
 
+/**
+ * Given an image performs OCR text recognition on it and returns the text
+ * decoded
+ */
 std::string getTextFromImage(cv::Mat &img);
+
+/**
+ * Checks if an audio buffer contains audio or is mute
+ */
 bool bufferHasAudio(short *audioData, unsigned int nElements);
 
 } /* namespace RestServer */

@@ -18,6 +18,10 @@ using namespace web::http::experimental::listener;
 
 namespace RestServer{
 
+	/**
+	 * Create an electrical reset and calculates time we had to wait until we observed a live stream
+	 * Uses an ePowerSwitch to reset the STB
+	 */
 	void wwwGetWakeupTime(web::http::http_request request){
 		json::value params = request.extract_json().get();
 		json::value reply;
@@ -74,6 +78,9 @@ namespace RestServer{
 		request.reply(status_codes::OK, reply);
 	}
 
+	/**
+	 * Calculates time we had to wait until we observed a live stream
+	 */
 	void wwwGetTimeToLive(web::http::http_request request){
 
 		json::value params = request.extract_json().get();

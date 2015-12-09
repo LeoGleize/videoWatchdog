@@ -29,6 +29,9 @@ using namespace web::http::experimental::listener;
 
 namespace RestServer {
 
+/*
+ * Detects the state of an STB after a given time of analysis
+ */
 void wwwdetectState(http_request request) {
 	json::value resp = request.extract_json().get();
 	json::value answer;
@@ -53,11 +56,12 @@ void wwwdetectState(http_request request) {
 	request.reply(status_codes::OK, answer);
 }
 
+/*
+ * Detects changes of state in a STB for a given time
+ */
 void wwwdetectEvent(http_request request) {
-
 	json::value params = request.extract_json().get();
 	json::value reply;
-
 	//check for parameters on received POST request
 	if ( params.has_field("timeAnalysis") && params["timeAnalysis"].is_integer()
 	  && params.has_field("eventType") && params["eventType"].is_array()
@@ -293,6 +297,12 @@ long detectStartAndEndOfBlackScreen(long maxTimeSearch){
 	return time;
 }
 
+/*
+ * Detect time that a STB takes to have a live signal for 10 seconds
+ * this detects when the STB is back from an standy/power off
+ *
+ * Returns how long the whole process took in milliseconds7
+ */
 long detectWakeUP(long maxTimeSearch){
 	long time = 0;
 	timeval t0, t1;
@@ -479,6 +489,10 @@ __detectScreenState detectStateChange(std::list<outputState>  &stateSearch,
 	return screenDetection;
 }
 
+
+/*
+ * Returns an string representing the name of an outputState object
+ */
 std::string getNameOfState(outputState o){
 	switch(o){
 		case S_LIVE_SIGNAL:
@@ -499,6 +513,9 @@ std::string getNameOfState(outputState o){
 	return "Not found";
 }
 
+/*
+ * Given a name of an outputState object returns its name
+ */
 outputState getStateByName(std::string name){
 	if(name == "LIVE")
 		return S_LIVE_SIGNAL;

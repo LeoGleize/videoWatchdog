@@ -13,6 +13,12 @@ x * imageRecognition.cpp
 
 namespace imageRecognition {
 
+	/**
+	 * Checks if a image has a black background, will cut a rectangle
+	 * in the image ignoring the bottom menu and top screen with time
+	 * and calculate a Norm of the image if smaller than threshold returns
+	 * true
+	 */
 	bool isImageBlackScreenOrZapScreen(cv::Mat &img, const cv::Vec3b &thresholdColor){
 		cv::Mat subrect(img, cv::Rect(5,0.14 * img.rows,img.cols-10,img.rows * 0.55));
 
@@ -59,8 +65,7 @@ namespace imageRecognition {
 	 */
 	std::string getTextFromImage(cv::Mat &img){
 		cv::Mat inverted, bw;
-		//we invert the image and threshold it before
-		//doing character recognition
+		//we invert the image and pass it to grayscale
 		cv::bitwise_not(img,inverted);
 		cv::cvtColor( inverted, bw, CV_RGB2GRAY);
 		// Initialize tesseract-ocr
@@ -78,6 +83,9 @@ namespace imageRecognition {
 		return ret;
 	}
 
+	/**
+	 * Checks if an audio buffer contains audio or is mute
+	 */
 	bool bufferHasAudio(short *audioData, unsigned int nElements){
 		short max = 0;
 		for(unsigned int i = 0; i < nElements; i++){
