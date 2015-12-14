@@ -20,4 +20,4 @@ clean:
 	rm -f $(OBJS) $(TARGET)
 
 install: 
-	 ln -s $(TARGET) /usr/bin/$(TARGET)
+	ln -s $(TARGET) /usr/bin/$(TARGET)
